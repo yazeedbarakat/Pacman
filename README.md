@@ -122,14 +122,6 @@ graph TD
 
 ---
 
-## Project Management
-
-Project management documentation, progress tracking, risk assessment, and peer evaluation acceptance test plans are documented in the dedicated `project_management/` directory.
-
-- Link to directory: [project_management/](project_management/)
-
----
-
 ## Resources
 
 ### References & Documentation
