@@ -5,6 +5,7 @@ import player_setup
 from ghost import Ghost, GhostState
 from ghost_renderer import GhostRenderer
 from config_parser import read_config
+from menu import show_main_menu
 
 config_file = sys.argv[1] if len(sys.argv) > 1 else 'config.json'
 config = read_config(config_file) if config_file else {}
@@ -121,6 +122,7 @@ def draw_hud(
 
 
 def main() -> None:
+    action = show_main_menu(screen, SCREEN_WIDTH, SCREEN_HEIGHT)
     tick_count = 0
     start_time = pygame.time.get_ticks()
 
