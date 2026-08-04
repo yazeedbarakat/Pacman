@@ -1,20 +1,19 @@
-from typing import Tuple, List, Dict
 from mazegenerator import MazeGenerator
+import pygame
 
 
-def maze_loader(maze_size: Tuple[int, int], maze_seed: int) -> Dict:
+def maze_loader(maze_size: tuple[int, int], maze_seed: int) -> dict:
     mg: MazeGenerator = MazeGenerator(size=maze_size, seed=maze_seed)
-    maze: Dict = {
-        'grid': mg.maze,
-        'maze_entry': mg.maze_entry,
-        'maze_exit': mg.maze_exit
-    }
+    maze: dict = {}
+    maze['grid']: list[list[int]] = mg.maze
+    maze['maze_entry']: tuple[int, int] = mg.maze_entry
+    maze['maze_exit']: tuple[int, int] = mg.maze_exit
     return maze
 
 
 class Pacgum:
-    def __init__(self, position: Tuple[int, int]) -> None:
-        self.position: Tuple[int, int] = position
+    def __init__(self, position: tuple[int, int]) -> None:
+        self.position: tuple[int, int] = position
         self.eaten: bool = False
         self.points = 10
 
@@ -22,25 +21,22 @@ class Pacgum:
         self.eaten = True
         return self.points
 
-
 class SuperPacgum(Pacgum):
-    def __init__(self, position: Tuple[int, int]) -> None:
+    def __init__(self, position: tuple[int, int]) -> None:
         super().__init__(position)
         self.points = 50
 
 
-def place_pacgums(
-    maze_size: Tuple[int, int],
-    maze_grid: List[List[int]]
-) -> List[Pacgum]:
-    pacgums: List[Pacgum] = []
-    w, h = maze_size
-    corners: List[Tuple[int, int]] = [
-        (0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)
-    ]
-    for row in range(h):
-        for col in range(w):
-            if maze_grid[row][col] != 0xF and (col, row) not in corners:
+
+def place_pacgums(maze_size: tuple[int, int], maze_grid: list[list[int]]) -> list[Pacgum]:
+    pacgums: list[Pacgum | SuperPacgum] = []
+    corners: list[tuple[int, int]] = [
+            (0, 0), (maze_size[0] -1, 0), (0, maze_size[1] -1),
+            (maze_size[0] -1, maze_size[1] -1)
+            ]
+    for row in range(maze_size[1]):
+        for col in range(maze_size[0]):
+            if maze_grid[row][col] != 0xF and not (col, row) in corners:
                 pacgums.append(Pacgum((col, row)))
     for cor in corners:
         pacgums.append(SuperPacgum(cor))
