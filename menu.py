@@ -1,50 +1,28 @@
 import pygame
 from sys import exit
 
-def show_main_menu(screen, screen_width, screen_height) -> str:
 
-    title_font = pygame.font.Font(None, 100)
-    menu_font = pygame.font.Font(None, 60)
-    
-    options = ["Start Game", "View Highscores", "Exit"]
-    selected_index = 0
-    
-    clock = pygame.time.Clock()
-    
-    while True:
+CELL_SIZE = 30
+WIDTH = 1000
+HEIGHT = 800
+pygame.init()
+FONT = pygame.font.Font(None, 50)
+s = pygame.display.set_mode((WIDTH, HEIGHT))
+pacman = pygame.transform.scale(pygame.image.load('assets/menu/pacman.png'),
+    (CELL_SIZE * 7, CELL_SIZE * 10))
+menu = pygame.transform.scale(pygame.image.load('assets/menu/game_menu.png'), (WIDTH, HEIGHT))
+s.blit(menu, (0, 0))
+start_button = pygame.Rect(WIDTH/2 - 133, HEIGHT/2 - 101, 269, 63)
+pygame.draw.rect(s, (80, 80, 80), start_button, border_radius=7)
+start_game = FONT.render("Start Game", True, (255, 255, 255))
+s.blit(start_game, (WIDTH/2 - 90, HEIGHT/2 - 85))
+pygame.draw.rect(s, (80, 80, 80), (WIDTH/2 - 133, HEIGHT/2 - 9, 269, 63), border_radius=7)
+pygame.draw.rect(s, (80, 80, 80), (WIDTH/2 - 133, HEIGHT/2 + 84, 269, 63), border_radius=7)
+pygame.draw.rect(s, (80, 80, 80), (WIDTH/2 - 133, HEIGHT/2 + 176, 269, 63), border_radius=7)
+pygame.display.update()
 
-        screen.fill('black')
-
-        title_text = title_font.render("PAC-MAN", True, 'yellow')
-        screen.blit(title_text, (screen_width // 2 - title_text.get_width() // 2, 150))
-
-        for i, option in enumerate(options):
-            color = 'yellow' if i == selected_index else 'white'
-            text = menu_font.render(option, True, color)
-            
-            x = screen_width // 2 - text.get_width() // 2
-            y = 350 + (i * 80)
-            screen.blit(text, (x, y))
-            
-        pygame.display.update()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
-            
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    selected_index = (selected_index - 1) % len(options)
-                elif event.key == pygame.K_DOWN:
-                    selected_index = (selected_index + 1) % len(options)
-                elif event.key == pygame.K_RETURN:
-                    if selected_index == 0:
-                        return "START"
-                    elif selected_index == 1:
-                        return "HIGHSCORES"
-                    elif selected_index == 2:
-                        pygame.quit()
-                        exit()
-                        
-        clock.tick(60)
+while(True):
+    for event in pygame.event.get():
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if start_button.collidepoint(event.pos):
+                continue
