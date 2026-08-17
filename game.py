@@ -3,6 +3,7 @@ import player_setup
 import  pygame
 import maze as m
 from config_parser import read_config
+from menu import display_menu
 
 con = read_config('config.json')
 
@@ -15,7 +16,7 @@ def get_level_config(level_index):
 maze_width, maze_height = get_level_config(0)
 level_time = con['level_max_time']
 CELL_SIZE = 30
-SCREEN_WIDTH, SCREEN_HEIGHT = maze_width * CELL_SIZE, maze_height * CELL_SIZE
+SCREEN_WIDTH, SCREEN_HEIGHT = 1920, 1080
 FPS = 60
 
 
@@ -28,10 +29,10 @@ pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'])
 player = player_setup.Player(maze['grid'], maze_width, maze_height)
 
 
-def draw_maze(maze: dict, cell_size: int) -> None:
+def draw_maze(maze: dict, cell_size: int, x_cor, y_cor) -> None:
     for y, row in enumerate(maze['grid']):
         for x, cell in enumerate(row):
-            sx, sy = x * cell_size, y * cell_size
+            sx, sy = x * cell_size + x_cor, y * cell_size + y_cor
             if cell == 0xF:
                 pygame.draw.rect(screen, 'grey', (sx, sy, cell_size, cell_size))
                 continue
@@ -65,7 +66,6 @@ def draw_pacgums() -> None:
             pygame.draw.circle(screen, 'yellow', (pacgum.position[0] * CELL_SIZE + CELL_SIZE // 2,
                 pacgum.position[1] * CELL_SIZE + CELL_SIZE // 2), rad)
 
-
 def switch_level(level_index) -> None:
     global maze_width, maze_height, SCREEN_WIDTH, SCREEN_HEIGHT, screen,\
     maze, pacgums, player, level_time
@@ -87,6 +87,25 @@ def main() -> None:
     frame_tick_count = 0
     timer_tick_count = 0
     level_index = 0
+    game_state = 'menu'
+    buttons = display_menu(screen, CELL_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
+    while(game_state == 'menu'):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if buttons[0].collidepoint(event.pos):
+                    game_state = 'playing'
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    player.cur_dir = 'U'
+                elif event.key == pygame.K_DOWN:
+                    player.cur_dir = 'D'
+                elif event.key == pygame.K_LEFT:
+                    player.cur_dir = 'L'
+                elif event.key == pygame.K_RIGHT:
+                    player.cur_dir = 'R'
     while True:
         if level_index > len(con['levels']):
             pygame.quit()
@@ -122,7 +141,7 @@ def main() -> None:
                     player.cur_dir = 'L'
                 elif event.key == pygame.K_RIGHT:
                     player.cur_dir = 'R'
-        draw_maze(maze, CELL_SIZE)
+        draw_maze(maze, CELL_SIZE, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
         draw_pacgums()
         draw_pacman()
         pygame.display.update()
