@@ -59,14 +59,28 @@ def display_cheat_mode(screen, CELL_SIZE, WIDTH, HEIGHT):
     screen.blit(menu_font.render("CHEAT MODE", True, (255, 255, 255)),
         (WIDTH - 300, HEIGHT/2 - 380))
 
-    unlimited_lives_button = pygame.Rect(WIDTH/2 + 490, HEIGHT/2 - 339, 324, 56)
-    pygame.draw.rect(screen, (0, 255, 0), unlimited_lives_button, border_radius=50)
+    unlimited_lives_button = pygame.Rect(WIDTH/2 + 520, HEIGHT/2 - 264, 324, 56)
+    pygame.draw.rect(screen, (0, 0, 0), unlimited_lives_button, border_radius=50)
     screen.blit(purple_button, (WIDTH/2 + 460, HEIGHT/2 - 339))
     unlimited_lives_text = menu_font.render("UNLIMITED LIVES", True, (255, 255, 255))
     screen.blit(unlimited_lives_text, (WIDTH/2 + 550, HEIGHT/2 - 250))
 
-    shadow_button = pygame.Rect(WIDTH/2 + 490, HEIGHT/2 - 180, 324, 56)
-    pygame.draw.rect(screen, (255, 0, 0), shadow_button, border_radius=50)
+    shadow_button = pygame.Rect(WIDTH/2 + 520, HEIGHT/2 - 180, 324, 56)
+    pygame.draw.rect(screen, (0, 0, 0), shadow_button, border_radius=50)
     screen.blit(purple_button, (WIDTH/2 + 460, HEIGHT/2 - 257))
-    shadow_text = menu_font.render("SHADOW MODE", True, (0, 0, 0))
-    screen.blit(shadow_text, (WIDTH/2 + 550, HEIGHT/2 - 150))
+    shadow_text = menu_font.render("SHADOW MODE", True, (255, 255, 255))
+    screen.blit(shadow_text, (WIDTH/2 + 550, HEIGHT/2 - 165))
+
+    skip_level_button = pygame.Rect(WIDTH/2 + 520, HEIGHT/2 - 100, 324, 56)
+    pygame.draw.rect(screen, (0, 0, 0), skip_level_button, border_radius=50)
+    screen.blit(purple_button, (WIDTH/2 + 460, HEIGHT/2 - 175))
+    skip_level_text = menu_font.render("SKIP LEVEL", True, (255, 255, 255))
+    screen.blit(skip_level_text, (WIDTH/2 + 550, HEIGHT/2 - 80))
+
+    pause_timer_button = pygame.Rect(WIDTH/2 + 520, HEIGHT/2 - 20, 324, 56)
+    pygame.draw.rect(screen, (0, 0, 0), pause_timer_button, border_radius=50)
+    screen.blit(purple_button, (WIDTH/2 + 460, HEIGHT/2 - 95))
+    pause_timer_text = menu_font.render("PAUSE TIMER", True, (255, 255, 255))
+    screen.blit(pause_timer_text, (WIDTH/2 + 550, HEIGHT/2))
+
+    return(unlimited_lives_button, shadow_button, skip_level_button, pause_timer_button)

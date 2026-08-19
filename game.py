@@ -6,7 +6,8 @@ from config_parser import read_config
 from menu import display_menu, display_instructions, display_cheat_mode
 
 con = read_config('config.json')
-
+pygame.font.init()
+timer_font = pygame.font.SysFont('sourcecodepro', 40, bold=True)
 def get_level_config(level_index):
     level = con['levels'][level_index]
     width = level['width']
@@ -29,7 +30,6 @@ clock = pygame.time.Clock()
 maze = m.maze_loader((maze_width, maze_height), 42)
 pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'])
 player = player_setup.Player(maze['grid'], maze_width, maze_height)
-
 
 def draw_maze(maze: dict, cell_size: int) -> None:
     for y, row in enumerate(maze['grid']):
@@ -83,14 +83,27 @@ def switch_level(level_index) -> None:
     player.lives = lives
     level_time = con['level_max_time']
 
+def display_timer(time):
+    minutes = time//60
+    if minutes // 10 == 0:
+        minutes = '0' + str(minutes)
+    seconds = time % 60
+    if seconds // 10 == 0:
+        seconds = '0' + str(seconds)
+    pygame.draw.rect(screen, (255, 0, 0),pygame.Rect(screen_width/2- 100, screen_height/2 - 500, 200, 50))
+    time_text = timer_font.render(f"{minutes}:{seconds}", True, (255, 255, 255))
+    screen.blit(time_text, (screen_width/2 - 50, screen_height/2 - 500))
+
+
 def main() -> None:
     global level_time
     frame_tick_count = 0
     timer_tick_count = 0
+    time_paused = False
     level_index = 0
     game_state = 'menu'
+    cheat_mode_buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
     buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
-
     while True:
         clock.tick(FPS)
         frame_tick_count += 1
@@ -108,10 +121,12 @@ def main() -> None:
             draw_maze(maze, CELL_SIZE)
             draw_pacgums()
             draw_pacman()
-        pygame.display.update()
+            display_timer(level_time)
+            pygame.display.update()
         if timer_tick_count >= FPS:
             timer_tick_count = 0
-            level_time -= 1
+            if not time_paused:
+                level_time -= 1
             if level_time <= 0:
                 pygame.quit()
                 exit()
@@ -121,19 +136,36 @@ def main() -> None:
                 pygame.quit()
                 exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if buttons[0].collidepoint(event.pos):
-                    game_state = 'playing'
-                    buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
-                    display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
-                elif buttons[1].collidepoint(event.pos):
-                    buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
-                    display_instructions(screen, CELL_SIZE, screen_width, screen_height)
-                    game_state = 'instructions'
-                elif buttons[2].collidepoint(event.pos):
-                    game_state = 'high_score'
-                elif buttons[3].collidepoint(event.pos):
-                    pygame.quit()
-                    exit()
+                if game_state == 'menu':
+                    if buttons[0].collidepoint(event.pos):
+                        game_state = 'playing'
+                        buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+                        cheat_mode_buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
+                    elif buttons[1].collidepoint(event.pos):
+                        buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+                        display_instructions(screen, CELL_SIZE, screen_width, screen_height)
+                        game_state = 'instructions'
+                    elif buttons[2].collidepoint(event.pos):
+                        game_state = 'high_score'
+                    elif buttons[3].collidepoint(event.pos):
+                        pygame.quit()
+                        exit()
+                elif game_state == 'playing':
+                    if cheat_mode_buttons[0].collidepoint(event.pos):
+                        player.lives = 100
+                    elif cheat_mode_buttons[1].collidepoint(event.pos):
+                        pass
+                    elif cheat_mode_buttons[2].collidepoint(event.pos):
+                        level_index += 1
+                        if level_index >= len(con['levels']):
+                            pygame.quit()
+                            exit()
+                        buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+                        switch_level(level_index)
+                        cheat_mode_buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
+                    elif cheat_mode_buttons[3].collidepoint(event.pos):
+                        time_paused = True
+
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     player.cur_dir = 'U'
@@ -151,6 +183,7 @@ def main() -> None:
                 exit()
             buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
             switch_level(level_index)
+            cheat_mode_buttons = (screen, CELL_SIZE, screen_width, screen_height)
 
 if __name__ == '__main__':
     main()
