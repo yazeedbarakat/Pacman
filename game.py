@@ -3,7 +3,7 @@ import player_setup
 import  pygame
 import maze as m
 from config_parser import read_config
-from menu import display_menu, display_instructions, display_cheat_mode
+from menu import display_menu, display_instructions, display_cheat_mode, display_submenu
 
 con = read_config('config.json')
 pygame.font.init()
@@ -139,12 +139,12 @@ def main() -> None:
                 if game_state == 'menu':
                     if buttons[0].collidepoint(event.pos):
                         game_state = 'playing'
-                        buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+                        #buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
                         cheat_mode_buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
                     elif buttons[1].collidepoint(event.pos):
-                        buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
-                        display_instructions(screen, CELL_SIZE, screen_width, screen_height)
                         game_state = 'instructions'
+                        buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+                        buttons = display_instructions(screen, CELL_SIZE, screen_width, screen_height)
                     elif buttons[2].collidepoint(event.pos):
                         game_state = 'high_score'
                     elif buttons[3].collidepoint(event.pos):
@@ -160,13 +160,26 @@ def main() -> None:
                         if level_index >= len(con['levels']):
                             pygame.quit()
                             exit()
-                        buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
                         switch_level(level_index)
                         cheat_mode_buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
                     elif cheat_mode_buttons[3].collidepoint(event.pos):
-                        time_paused = True
-
-            elif event.type == pygame.KEYDOWN:
+                        time_paused = not(time_paused)
+                        if time_paused:
+                            pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(screen_width/2 + 800, screen_height/2, 20, 20), border_radius=50)
+                        else:
+                            pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(screen_width/2 + 800, screen_height/2, 20, 20), border_radius=50)
+                elif game_state == 'submenu':
+                    if buttons[0].collidepoint(event.pos):
+                        game_state = 'playing'
+                        cheat_mode_buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
+                    elif buttons[1].collidepoint(event.pos):
+                        game_state = 'menu'
+                        buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+                elif game_state == 'instructions':
+                    if buttons[0].collidepoint(event.pos):
+                        game_state = 'menu'
+                        buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+            elif event.type == pygame.KEYDOWN and game_state == 'playing':
                 if event.key == pygame.K_UP:
                     player.cur_dir = 'U'
                 elif event.key == pygame.K_DOWN:
@@ -175,15 +188,18 @@ def main() -> None:
                     player.cur_dir = 'L'
                 elif event.key == pygame.K_RIGHT:
                     player.cur_dir = 'R'
+                elif event.key == pygame.K_ESCAPE:
+                    game_state = 'submenu'
+                    buttons = display_submenu(screen, CELL_SIZE, screen_width, screen_height)
+                    pygame.display.update()
         if all(pacgum.eaten for pacgum in pacgums):
             print(f"Level complete! {player.score}")
             level_index += 1
             if level_index >= len(con['levels']):
                 pygame.quit()
                 exit()
-            buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
             switch_level(level_index)
-            cheat_mode_buttons = (screen, CELL_SIZE, screen_width, screen_height)
+            cheat_mode_buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
 
 if __name__ == '__main__':
     main()
