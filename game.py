@@ -1,9 +1,14 @@
+from os import name
 from sys import exit
+import ghost_renderer
+from ghost import Ghost  # TEMP-GHOST
+from high_scores_config import add_high_score
 import player_setup
 import  pygame
 import maze as m
 from config_parser import read_config
-from menu import display_menu, display_instructions, display_cheat_mode, display_submenu
+from menu import display_menu, display_instructions, display_cheat_mode, \
+display_submenu, display_high_scores
 
 con = read_config('config.json')
 pygame.font.init()
@@ -21,7 +26,7 @@ screen_width, screen_height = 1920, 1080
 x_cor = screen_width // 2 - maze_width * CELL_SIZE // 2
 y_cor = screen_height // 2 - 200
 FPS = 60
-
+heart = pygame.transform.scale(pygame.image.load('assets/menu/heart.png'), (60, 60))
 
 pygame.init()
 screen = pygame.display.set_mode((screen_width, screen_height))
@@ -30,6 +35,13 @@ clock = pygame.time.Clock()
 maze = m.maze_loader((maze_width, maze_height), 42)
 pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'])
 player = player_setup.Player(maze['grid'], maze_width, maze_height)
+ghost_renderer = ghost_renderer.GhostRenderer(cell_size=CELL_SIZE)  # TEMP-GHOST: was called with wrong args
+
+def make_ghosts(width, height):  # TEMP-GHOST
+    corners = [(0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)]
+    return [Ghost(cx, cy, True) for cx, cy in corners]
+
+ghosts = make_ghosts(maze_width, maze_height)  # TEMP-GHOST
 
 def draw_maze(maze: dict, cell_size: int) -> None:
     for y, row in enumerate(maze['grid']):
@@ -71,7 +83,7 @@ def draw_pacgums() -> None:
 
 def switch_level(level_index) -> None:
     global maze_width, maze_height, SCREEN_WIDTH, SCREEN_HEIGHT, screen,\
-    maze, pacgums, player, level_time, x_cor
+    maze, pacgums, player, level_time, x_cor, ghosts
     maze_width, maze_height = get_level_config(level_index)
     x_cor = screen_width // 2 - maze_width * CELL_SIZE // 2
     maze = m.maze_loader((maze_width, maze_height), 42)
@@ -81,7 +93,14 @@ def switch_level(level_index) -> None:
     player = player_setup.Player(maze['grid'], maze_width, maze_height)
     player.score = score
     player.lives = lives
+    ghosts = make_ghosts(maze_width, maze_height)  # TEMP-GHOST
     level_time = con['level_max_time']
+
+def display_hearts(lives: int):
+    pygame.draw.rect(screen, (0, 0, 0), pygame.Rect(screen_width/2 - 350, screen_height/2 - 500, 120, 50))
+    hearts = 3 if lives >= 3 else lives
+    for i in range(hearts):
+        screen.blit(heart, (screen_width/2 - 360 + i * 40, screen_height/2 - 505))
 
 def display_timer(time):
     minutes = time//60
@@ -90,9 +109,9 @@ def display_timer(time):
     seconds = time % 60
     if seconds // 10 == 0:
         seconds = '0' + str(seconds)
-    pygame.draw.rect(screen, (255, 0, 0),pygame.Rect(screen_width/2- 100, screen_height/2 - 500, 200, 50))
+    pygame.draw.rect(screen, (0, 0, 0),pygame.Rect(screen_width/2- 80, screen_height/2 - 500, 130, 50))
     time_text = timer_font.render(f"{minutes}:{seconds}", True, (255, 255, 255))
-    screen.blit(time_text, (screen_width/2 - 50, screen_height/2 - 500))
+    screen.blit(time_text, (screen_width/2 - 75, screen_height/2 - 500))
 
 
 def main() -> None:
@@ -103,6 +122,10 @@ def main() -> None:
     level_index = 0
     game_state = 'menu'
     cheat_mode_buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
+    invincible = False
+    shadow_mode = False
+    speed_boost = False
+    player_name = ''
     buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
     while True:
         clock.tick(FPS)
@@ -116,12 +139,30 @@ def main() -> None:
                     if not pacgum.eaten and pacgum.position == player.position:
                         pacgum.eaten = True
                         player.score += pacgum.eat()
+                        if isinstance(pacgum, m.SuperPacgum):  # TEMP-GHOST
+                            for ghost in ghosts:  # TEMP-GHOST
+                                ghost.make_edible()  # TEMP-GHOST
+                for ghost in ghosts:  # TEMP-GHOST
+                    if not(shadow_mode):
+                        ghost.update(player.position, maze['grid'])  # TEMP-GHOST
+                    if (ghost.x, ghost.y) == player.position:  # TEMP-GHOST
+                        if ghost.state == "escape":  # TEMP-GHOST
+                            ghost.get_eaten()  # TEMP-GHOST
+                            player.score += con['points_per_ghost']  # TEMP-GHOST
+                        elif ghost.state == "chasing" and not invincible:  # TEMP-GHOST
+                            if not player.respawn():  # TEMP-GHOST
+                                pygame.quit()  # TEMP-GHOST
+                                exit()  # TEMP-GHOST
             frame_tick_count = 0
         if game_state == 'playing':
             draw_maze(maze, CELL_SIZE)
             draw_pacgums()
             draw_pacman()
+            # TEMP-GHOST: subsurface lines up ghost grid coords with the maze's x_cor/y_cor offset
+            maze_surface = screen.subsurface((x_cor, y_cor, maze_width * CELL_SIZE, maze_height * CELL_SIZE))  # TEMP-GHOST
+            ghost_renderer.draw_ghosts(maze_surface, ghosts)  # TEMP-GHOST
             display_timer(level_time)
+            display_hearts(player.lives)
             pygame.display.update()
         if timer_tick_count >= FPS:
             timer_tick_count = 0
@@ -147,38 +188,49 @@ def main() -> None:
                         buttons = display_instructions(screen, CELL_SIZE, screen_width, screen_height)
                     elif buttons[2].collidepoint(event.pos):
                         game_state = 'high_score'
+                        buttons = display_high_scores(screen, CELL_SIZE, screen_width, screen_height)
                     elif buttons[3].collidepoint(event.pos):
                         pygame.quit()
                         exit()
                 elif game_state == 'playing':
                     if cheat_mode_buttons[0].collidepoint(event.pos):
-                        player.lives = 100
+                        invincible = not(invincible)
                     elif cheat_mode_buttons[1].collidepoint(event.pos):
-                        pass
+                        player.lives = 100000
                     elif cheat_mode_buttons[2].collidepoint(event.pos):
+                        shadow_mode = not(shadow_mode)
+                    elif cheat_mode_buttons[3].collidepoint(event.pos):
                         level_index += 1
                         if level_index >= len(con['levels']):
                             pygame.quit()
                             exit()
                         switch_level(level_index)
                         cheat_mode_buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
-                    elif cheat_mode_buttons[3].collidepoint(event.pos):
+                    elif cheat_mode_buttons[4].collidepoint(event.pos):
                         time_paused = not(time_paused)
                         if time_paused:
                             pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(screen_width/2 + 800, screen_height/2, 20, 20), border_radius=50)
                         else:
                             pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(screen_width/2 + 800, screen_height/2, 20, 20), border_radius=50)
+                    elif cheat_mode_buttons[5].collidepoint(event.pos):
+                        speed_boost = not(speed_boost)
                 elif game_state == 'submenu':
                     if buttons[0].collidepoint(event.pos):
                         game_state = 'playing'
                         cheat_mode_buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
                     elif buttons[1].collidepoint(event.pos):
-                        game_state = 'menu'
-                        buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+                        game_state = 'name_entry'
+
                 elif game_state == 'instructions':
                     if buttons[0].collidepoint(event.pos):
                         game_state = 'menu'
                         buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+                elif game_state == 'high_score':
+                    if buttons[0].collidepoint(event.pos):
+                        game_state = 'menu'
+                        buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+                elif game_state == 'name_entry':
+                    pass
             elif event.type == pygame.KEYDOWN and game_state == 'playing':
                 if event.key == pygame.K_UP:
                     player.cur_dir = 'U'

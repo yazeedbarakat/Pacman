@@ -1,5 +1,6 @@
 import pygame
 from sys import exit
+from high_scores_config import load_high_scores
 
 pygame.font.init()
 menu_font = pygame.font.SysFont('comfortaa', 30)
@@ -8,6 +9,7 @@ purple_button = pygame.transform.scale(pygame.image.load('assets/menu/purple_but
 menu = pygame.transform.scale(pygame.image.load('assets/menu/game_background.png'), (1920, 1080))
 pacman = pygame.image.load('assets/menu/pac-man.png')
 #pacman = pygame.transform.scale(pacman, (500, 500))
+heart = pygame.transform.scale(pygame.image.load('assets/menu/heart.png'), (50, 50))
 
 def display_menu(screen, CELL_SIZE, WIDTH, HEIGHT):
     pacman_logo = pygame.image.load('assets/menu/Pac-Man-Logo.png')
@@ -57,18 +59,39 @@ def display_instructions(screen, CELL_SIZE, WIDTH, HEIGHT):
     screen.blit(menu_font.render("Use the arrow keys to move", True, (255, 255, 255)),
         (WIDTH/2 - 200, HEIGHT/2 - 10))
     screen.blit(arrows, (WIDTH/2 - 130, HEIGHT/2 - 230))
-    back_menu_button = pygame.Rect(WIDTH/2 - 160, HEIGHT/2 + 185, 320, 50)
+    back_menu_button = pygame.Rect(WIDTH/2 - 160, HEIGHT/2 + 257, 320, 50)
     pygame.draw.rect(screen, (0, 0, 0), back_menu_button, border_radius=50)
-    screen.blit(yellow_button, (WIDTH/2 - 213, HEIGHT/2 + 103))
+    screen.blit(yellow_button, (WIDTH/2 - 213, HEIGHT/2 + 180))
     screen.blit(menu_font.render("Back to Menu", True, (255, 255, 255)),
-        (WIDTH/2 - 105, HEIGHT/2 + 190))
+        (WIDTH/2 - 105, HEIGHT/2 + 266))
     pygame.display.update()
     return (back_menu_button, )
 
+def display_high_scores(screen, CELL_SIZE, WIDTH, HEIGHT):
+    screen.blit(menu, (0, 0))
+    high_scores = load_high_scores('high_scores.json')
+    for i, score in enumerate(high_scores):
+        score_text = menu_font.render(str(score), True, (255, 255, 255))
+        screen.blit(score_text, (WIDTH/2 - 100, HEIGHT/2 - 100 + i * 50))
+    back_menu_button = pygame.Rect(WIDTH/2 - 160, HEIGHT/2 + 257, 320, 50)
+    pygame.draw.rect(screen, (255, 0, 0), back_menu_button, border_radius=50)
+    screen.blit(yellow_button, (WIDTH/2 - 213, HEIGHT/2 + 180))
+    screen.blit(menu_font.render("Back to Menu", True, (255, 255, 255)),
+        (WIDTH/2 - 105, HEIGHT/2 + 266))
+    pygame.display.update()
+    return (back_menu_button, )
+
+def display_save(screen, CELL_SIZE, WIDTH, HEIGHT):
+    screen.blit(menu, (0, 0))
+
 def display_cheat_mode(screen, CELL_SIZE, WIDTH, HEIGHT):
     screen.blit(menu, (0, 0))
-    screen.blit(menu_font.render("CHEAT MODE", True, (255, 255, 255)),
-        (WIDTH - 300, HEIGHT/2 - 380))
+
+    invincibility_button = pygame.Rect(WIDTH/2 + 520, HEIGHT/2 - 348, 324, 56)
+    pygame.draw.rect(screen, (0, 0, 0), invincibility_button, border_radius=50)
+    screen.blit(purple_button, (WIDTH/2 + 460, HEIGHT/2 - 424))
+    invincibility_text = menu_font.render("INVINCIBILITY", True, (255, 255, 255))
+    screen.blit(invincibility_text, (WIDTH/2 + 550, HEIGHT/2 - 335))
 
     unlimited_lives_button = pygame.Rect(WIDTH/2 + 520, HEIGHT/2 - 264, 324, 56)
     pygame.draw.rect(screen, (0, 0, 0), unlimited_lives_button, border_radius=50)
@@ -80,21 +103,28 @@ def display_cheat_mode(screen, CELL_SIZE, WIDTH, HEIGHT):
     pygame.draw.rect(screen, (0, 0, 0), shadow_button, border_radius=50)
     screen.blit(purple_button, (WIDTH/2 + 460, HEIGHT/2 - 257))
     shadow_text = menu_font.render("SHADOW MODE", True, (255, 255, 255))
-    screen.blit(shadow_text, (WIDTH/2 + 550, HEIGHT/2 - 165))
+    screen.blit(shadow_text, (WIDTH/2 + 550, HEIGHT/2 - 168))
 
     skip_level_button = pygame.Rect(WIDTH/2 + 520, HEIGHT/2 - 100, 324, 56)
     pygame.draw.rect(screen, (0, 0, 0), skip_level_button, border_radius=50)
     screen.blit(purple_button, (WIDTH/2 + 460, HEIGHT/2 - 175))
     skip_level_text = menu_font.render("SKIP LEVEL", True, (255, 255, 255))
-    screen.blit(skip_level_text, (WIDTH/2 + 550, HEIGHT/2 - 80))
+    screen.blit(skip_level_text, (WIDTH/2 + 550, HEIGHT/2 - 85))
 
     pause_timer_button = pygame.Rect(WIDTH/2 + 520, HEIGHT/2 - 20, 324, 56)
     pygame.draw.rect(screen, (0, 0, 0), pause_timer_button, border_radius=50)
     screen.blit(purple_button, (WIDTH/2 + 460, HEIGHT/2 - 95))
     pause_timer_text = menu_font.render("PAUSE TIMER", True, (255, 255, 255))
-    screen.blit(pause_timer_text, (WIDTH/2 + 550, HEIGHT/2))
+    screen.blit(pause_timer_text, (WIDTH/2 + 550, HEIGHT/2 - 5))
 
-    return(unlimited_lives_button, shadow_button, skip_level_button, pause_timer_button)
+    speed_boost_button = pygame.Rect(WIDTH/2 + 520, HEIGHT/2 + 64, 324, 56)
+    pygame.draw.rect(screen, (255, 0, 0), speed_boost_button, border_radius=50)
+    screen.blit(purple_button, (WIDTH/2 + 460, HEIGHT/2 - 12))
+    speed_boost_text = menu_font.render("SPEED BOOST", True, (255, 255, 255))
+    screen.blit(speed_boost_text, (WIDTH/2 + 550, HEIGHT/2 + 77))
+
+    return(invincibility_button, unlimited_lives_button, shadow_button,
+        skip_level_button, pause_timer_button, speed_boost_button)
 
 def display_submenu(screen, CELL_SIZE, WIDTH, HEIGHT):
     screen.blit(menu, (0, 0))
@@ -109,5 +139,5 @@ def display_submenu(screen, CELL_SIZE, WIDTH, HEIGHT):
     pygame.draw.rect(screen, (0, 0, 0), save_quit_button, border_radius=50)
     screen.blit(yellow_button, (WIDTH/2 - 213, HEIGHT/2 + 124))
     save_quit_text = menu_font.render("Save and Quit", True, (255, 255, 255))
-    screen.blit(save_quit_text, (WIDTH/2 - 110, HEIGHT/2 + 210))
+    screen.blit(save_quit_text, (WIDTH/2 - 110, HEIGHT/2 + 213))
     return(continue_button, save_quit_button)

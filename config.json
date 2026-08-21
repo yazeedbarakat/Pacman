@@ -2,12 +2,12 @@
     "highscore_filename": "pc.json",
     "levels": [
         {
-            "width": 4,
-            "height": 4
+            "width": 20,
+            "height": 15
         },
         {
-            "width": 2,
-            "height": 2
+            "width": 20,
+            "height": 15
         },
         {
             "width": 20,
