@@ -129,6 +129,11 @@ def display_cheat_mode(screen, CELL_SIZE, WIDTH, HEIGHT):
 def display_submenu(screen, CELL_SIZE, WIDTH, HEIGHT):
     screen.blit(menu, (0, 0))
     screen.blit(pacman, (WIDTH/2 - 270, HEIGHT/2 - 500))
+
+    name_rect = pygame.Rect(WIDTH/2 - 150, HEIGHT/2, 300, 60)
+    pygame.draw.rect(screen, (0, 0, 255), name_rect, 2)
+    #text_surface = menu_font.render()
+
     continue_button = pygame.Rect(WIDTH/2 - 162, HEIGHT/2 + 110, 324, 56)
     pygame.draw.rect(screen, (0, 0, 0), continue_button, border_radius=50)
     screen.blit(yellow_button, (WIDTH/2 - 213, HEIGHT/2 + 34))

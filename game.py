@@ -13,6 +13,7 @@ display_submenu, display_high_scores
 con = read_config('config.json')
 pygame.font.init()
 timer_font = pygame.font.SysFont('sourcecodepro', 40, bold=True)
+level_font = pygame.font.SysFont('montserrat', 45, bold=True)
 def get_level_config(level_index):
     level = con['levels'][level_index]
     width = level['width']
@@ -36,12 +37,12 @@ maze = m.maze_loader((maze_width, maze_height), 42)
 pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'])
 player = player_setup.Player(maze['grid'], maze_width, maze_height)
 ghost_renderer = ghost_renderer.GhostRenderer(cell_size=CELL_SIZE)  # TEMP-GHOST: was called with wrong args
-
-def make_ghosts(width, height):  # TEMP-GHOST
+level = 0
+def make_ghosts(width, height, level):  # TEMP-GHOST
     corners = [(0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)]
-    return [Ghost(cx, cy, True) for cx, cy in corners]
+    return [Ghost(cx, cy, 1, maze['grid'], level) for cx, cy in corners]
 
-ghosts = make_ghosts(maze_width, maze_height)  # TEMP-GHOST
+ghosts = make_ghosts(maze_width, maze_height, level)  # TEMP-GHOST
 
 def draw_maze(maze: dict, cell_size: int) -> None:
     for y, row in enumerate(maze['grid']):
@@ -93,7 +94,7 @@ def switch_level(level_index) -> None:
     player = player_setup.Player(maze['grid'], maze_width, maze_height)
     player.score = score
     player.lives = lives
-    ghosts = make_ghosts(maze_width, maze_height)  # TEMP-GHOST
+    ghosts = make_ghosts(maze_width, maze_height, level_index + 1)  # TEMP-GHOST
     level_time = con['level_max_time']
 
 def display_hearts(lives: int):
@@ -101,6 +102,11 @@ def display_hearts(lives: int):
     hearts = 3 if lives >= 3 else lives
     for i in range(hearts):
         screen.blit(heart, (screen_width/2 - 360 + i * 40, screen_height/2 - 505))
+
+def display_level(level: int):
+    pygame.draw.rect(screen, (0, 0, 0), pygame.Rect(screen_width/2 + 200, screen_height/2 - 500, 190, 50))
+    level_text = level_font.render(f'level: {level}', True, (255, 255, 255))
+    screen.blit(level_text, (screen_width/2 + 200, screen_height/2 - 500))
 
 def display_timer(time):
     minutes = time//60
@@ -144,7 +150,7 @@ def main() -> None:
                                 ghost.make_edible()  # TEMP-GHOST
                 for ghost in ghosts:  # TEMP-GHOST
                     if not(shadow_mode):
-                        ghost.update(player.position, maze['grid'])  # TEMP-GHOST
+                        ghost.update(player.position)  # TEMP-GHOST
                     if (ghost.x, ghost.y) == player.position:  # TEMP-GHOST
                         if ghost.state == "escape":  # TEMP-GHOST
                             ghost.get_eaten()  # TEMP-GHOST
@@ -163,6 +169,7 @@ def main() -> None:
             ghost_renderer.draw_ghosts(maze_surface, ghosts)  # TEMP-GHOST
             display_timer(level_time)
             display_hearts(player.lives)
+            display_level(level_index + 1)
             pygame.display.update()
         if timer_tick_count >= FPS:
             timer_tick_count = 0
@@ -220,7 +227,8 @@ def main() -> None:
                         cheat_mode_buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
                     elif buttons[1].collidepoint(event.pos):
                         game_state = 'name_entry'
-
+                        #input_rect = pygame.Rect(screen_width/2, screen_height/2, 600, 900)
+                        #pygame.draw.rect(screen, (255, 0, 0), input_rect)
                 elif game_state == 'instructions':
                     if buttons[0].collidepoint(event.pos):
                         game_state = 'menu'
@@ -231,6 +239,10 @@ def main() -> None:
                         buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
                 elif game_state == 'name_entry':
                     pass
+            elif game_state == 'instructions':
+                if buttons[0].collidepoint(event.pos):
+                    game_state = 'menu'
+                    buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
             elif event.type == pygame.KEYDOWN and game_state == 'playing':
                 if event.key == pygame.K_UP:
                     player.cur_dir = 'U'
@@ -244,14 +256,24 @@ def main() -> None:
                     game_state = 'submenu'
                     buttons = display_submenu(screen, CELL_SIZE, screen_width, screen_height)
                     pygame.display.update()
+            elif event.type == pygame.KEYDOWN and game_state == 'name_entry':
+                if event.key == pygame.K_BACKSPACE:
+                    player_name = player_name[:-1]
+                elif event.key == pygame.K_KP_ENTER:
+                    game_state = 'menu'
+                    buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+                else:
+                    player_name += event.unicode
+                    text_surface = level_font.render(player_name, True, (255, 255, 255))
+                    screen.blit(text_surface, (screen_width/2 - 150, screen_height/2))
         if all(pacgum.eaten for pacgum in pacgums):
             print(f"Level complete! {player.score}")
             level_index += 1
             if level_index >= len(con['levels']):
                 pygame.quit()
                 exit()
+            #level += 1
             switch_level(level_index)
             cheat_mode_buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
-
 if __name__ == '__main__':
     main()

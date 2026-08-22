@@ -1,26 +1,18 @@
 import os
+import sys
 import pygame
 from typing import List, Dict, Optional
 from ghost import Ghost
 
-
 class GhostRenderer:
-    """Handles loading ghost sprite assets and rendering ghosts onto screen."""
-
     def __init__(self, cell_size: int = 18) -> None:
-        """Initialize the GhostRenderer.
-
-        Args:
-            cell_size (int): Size of a maze cell in pixels. Defaults to 18.
-        """
         self.cell_size: int = cell_size
-        self.sprite_size: int = max(12, cell_size - 4)
-        self.offset: int = (cell_size - self.sprite_size) // 2
-        self.sprites: Dict[str, pygame.Surface] = {}
-        self._load_sprites()
+        self.ghost_size: int = cell_size - 4
+        self.center_offset: int = (cell_size - self.ghost_size) // 2
+        self.ghost_images: Dict[str, pygame.Surface] = {}
+        self._load_ghost_images()
 
-    def _load_sprites(self) -> None:
-        """Load ghost PNG images from assets/ghosts/ and scale them."""
+    def _load_ghost_images(self) -> None:
         asset_files = {
             'blinky': 'assets/ghosts/blinky.png',
             'pinky': 'assets/ghosts/pinky.png',
@@ -30,14 +22,18 @@ class GhostRenderer:
         }
 
         for name, path in asset_files.items():
-            if os.path.exists(path):
-                try:
-                    image = pygame.image.load(path).convert_alpha()
-                    self.sprites[name] = pygame.transform.scale(
-                        image, (self.sprite_size, self.sprite_size)
-                    )
-                except pygame.error as e:
-                    print(f"Warning: Could not load ghost image '{path}': {e}")
+            if not os.path.exists(path):
+                print(f"Error: Missing ghost image file at '{path}'")
+                sys.exit(1)
+                
+            try:
+                image = pygame.image.load(path).convert_alpha()
+                self.ghost_images[name] = pygame.transform.scale(
+                    image, (self.ghost_size, self.ghost_size)
+                )
+            except pygame.error as e:
+                print(f"Error: Could not load ghost image '{path}': {e}")
+                sys.exit(1)
 
     def draw_ghost(
         self,
@@ -45,38 +41,13 @@ class GhostRenderer:
         ghost: Ghost,
         ghost_name: str = 'blinky'
     ) -> None:
-        """Draw a single ghost based on its current state and identity.
-
-        Args:
-            screen (pygame.Surface): Pygame display surface.
-            ghost (Ghost): The ghost instance to render.
-            ghost_name (str): The name/identity of the ghost
-                              ('blinky', 'pinky', 'inky', 'clyde').
-        """
-        gx = ghost.x * self.cell_size + self.offset
-        gy = ghost.y * self.cell_size + self.offset
-        sz = self.sprite_size
+        gx = ghost.x * self.cell_size + self.center_offset
+        gy = ghost.y * self.cell_size + self.center_offset
 
         if ghost.state == "escape":
-            if 'blue' in self.sprites:
-                screen.blit(self.sprites['blue'], (gx, gy))
-            else:
-                pygame.draw.rect(screen, 'blue', (gx, gy, sz, sz))
-        elif ghost.state == "respawn":
-            pygame.draw.rect(screen, 'white', (gx, gy, sz, sz))
-        else:
-            # GhostState.CHASING
-            if ghost_name in self.sprites:
-                screen.blit(self.sprites[ghost_name], (gx, gy))
-            else:
-                color_map = {
-                    'blinky': 'red',
-                    'pinky': 'pink',
-                    'inky': 'cyan',
-                    'clyde': 'orange'
-                }
-                color = color_map.get(ghost_name, 'red')
-                pygame.draw.rect(screen, color, (gx, gy, sz, sz))
+            screen.blit(self.ghost_images['blue'], (gx, gy))
+        elif ghost.state == "chasing":
+            screen.blit(self.ghost_images[ghost_name], (gx, gy))
 
     def draw_ghosts(
         self,
@@ -84,16 +55,11 @@ class GhostRenderer:
         ghosts: List[Ghost],
         ghost_names: Optional[List[str]] = None
     ) -> None:
-        """Draw all ghosts in the game.
-
-        Args:
-            screen (pygame.Surface): Pygame display surface.
-            ghosts (List[Ghost]): List of ghost instances.
-            ghost_names (Optional[List[str]]): List of ghost names in order.
-        """
         if ghost_names is None:
             ghost_names = ['blinky', 'pinky', 'inky', 'clyde']
 
-        for i, ghost in enumerate(ghosts):
+        i = 0
+        for ghost in ghosts:
             name = ghost_names[i % len(ghost_names)]
             self.draw_ghost(screen, ghost, name)
+            i += 1
