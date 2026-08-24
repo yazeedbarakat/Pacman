@@ -4,7 +4,8 @@ import random
 
 
 class Ghost:
-    def __init__(self, start_x: int, start_y: int, difficulty: int, maze: List[List[int]], level: int = 1):
+    def __init__(self, start_x: int, start_y: int, difficulty: int,
+                 maze: List[List[int]], level: int = 1):
         self.start_x = start_x
         self.start_y = start_y
         self.x = start_x
@@ -22,7 +23,6 @@ class Ghost:
             (0, 1): 0x4,
             (-1, 0): 0x8
         }
-
 
         if self.difficulty < 5:
             self.return_life = max(1, 8 - (self.level * 0.5))
@@ -52,6 +52,8 @@ class Ghost:
         self.state = "respawn"
         self.x = self.start_x
         self.y = self.start_y
+        self.prev_x = self.start_x
+        self.prev_y = self.start_y
         self.death_time = time.time()
 
     def make_edible(self) -> None:
@@ -60,6 +62,7 @@ class Ghost:
             self.edible_time = time.time()
 
     def chase_player(self, player_pos: Tuple[int, int]) -> None:
+        self.prev_x, self.prev_y = self.x, self.y
         target_x, target_y = player_pos
 
         current_distance = abs(target_x - self.x) + abs(target_y - self.y)
@@ -68,7 +71,7 @@ class Ghost:
             self.random_move()
             return
 
-        queue = [(self.x, self.y, [])]
+        queue: List[Tuple[int, int, List[Tuple[int, int]]]] = [(self.x, self.y, [])]
         visited = {(self.x, self.y)}
         best_path = []
 
@@ -95,6 +98,7 @@ class Ghost:
             self.x, self.y = best_path[0]
 
     def escape_player(self, player_pos: Tuple[int, int]) -> None:
+        self.prev_x, self.prev_y = self.x, self.y
         target_x, target_y = player_pos
 
         best_move: Optional[Tuple[int, int]] = None
@@ -130,7 +134,8 @@ class Ghost:
             self.prev_x, self.prev_y = self.x, self.y
             self.x, self.y = random.choice(valid_moves)
 
-    def is_valid_move(self, curr_x: int, curr_y: int, next_x: int, next_y: int, wall_bit: int) -> bool:
+    def is_valid_move(self, curr_x: int, curr_y: int, next_x: int,
+                      next_y: int, wall_bit: int) -> bool:
         if 0 <= next_y < len(self.maze) and 0 <= next_x < len(self.maze[0]):
             no_wall = not (self.maze[curr_y][curr_x] & wall_bit)
             not_solid = (self.maze[next_y][next_x] != 0xF)
