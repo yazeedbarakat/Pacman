@@ -67,12 +67,14 @@ def display_instructions(screen, CELL_SIZE, WIDTH, HEIGHT):
     pygame.display.update()
     return (back_menu_button, )
 
-def display_high_scores(screen, CELL_SIZE, WIDTH, HEIGHT):
+def display_high_scores(screen, CELL_SIZE, WIDTH, HEIGHT, file_name):
     screen.blit(menu, (0, 0))
-    high_scores = load_high_scores('high_scores.json')
+    high_scores = load_high_scores(file_name)
+    high_scores = sorted(high_scores, key=lambda x: x['score'], reverse=True)
     for i, score in enumerate(high_scores):
-        score_text = menu_font.render(str(score), True, (255, 255, 255))
-        screen.blit(score_text, (WIDTH/2 - 100, HEIGHT/2 - 100 + i * 50))
+
+        score_text = menu_font.render(f'{i + 1} - {score['name']} : {score['score']}' , True, 'white')
+        screen.blit(score_text, (WIDTH/2 - 400, HEIGHT/2 - 500 + i * 50))
     back_menu_button = pygame.Rect(WIDTH/2 - 160, HEIGHT/2 + 257, 320, 50)
     pygame.draw.rect(screen, (255, 0, 0), back_menu_button, border_radius=50)
     screen.blit(yellow_button, (WIDTH/2 - 213, HEIGHT/2 + 180))
@@ -130,8 +132,7 @@ def display_submenu(screen, CELL_SIZE, WIDTH, HEIGHT):
     screen.blit(menu, (0, 0))
     screen.blit(pacman, (WIDTH/2 - 270, HEIGHT/2 - 500))
 
-    name_rect = pygame.Rect(WIDTH/2 - 150, HEIGHT/2, 300, 60)
-    pygame.draw.rect(screen, (0, 0, 255), name_rect, 2)
+
     #text_surface = menu_font.render()
 
     continue_button = pygame.Rect(WIDTH/2 - 162, HEIGHT/2 + 110, 324, 56)

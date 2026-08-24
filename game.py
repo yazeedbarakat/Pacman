@@ -11,9 +11,12 @@ from menu import display_menu, display_instructions, display_cheat_mode, \
 display_submenu, display_high_scores
 
 con = read_config('config.json')
+print(con)
 pygame.font.init()
 timer_font = pygame.font.SysFont('sourcecodepro', 40, bold=True)
 level_font = pygame.font.SysFont('montserrat', 45, bold=True)
+name_font = pygame.font.SysFont('comfortaa', 50, bold=True)
+
 def get_level_config(level_index):
     level = con['levels'][level_index]
     width = level['width']
@@ -119,7 +122,6 @@ def display_timer(time):
     time_text = timer_font.render(f"{minutes}:{seconds}", True, (255, 255, 255))
     screen.blit(time_text, (screen_width/2 - 75, screen_height/2 - 500))
 
-
 def main() -> None:
     global level_time
     frame_tick_count = 0
@@ -171,6 +173,21 @@ def main() -> None:
             display_hearts(player.lives)
             display_level(level_index + 1)
             pygame.display.update()
+        elif game_state == 'submenu':
+            buttons = display_submenu(screen, CELL_SIZE, screen_width, screen_height)
+            if player_name == '':
+                name_rect = pygame.Rect(screen_width/2 - 155, screen_height/2 + 14, 340, 50)
+                pygame.draw.rect(screen, 'yellow', name_rect, 2)
+                text_surface = name_font.render('enter your name', True, 'grey')
+                screen.blit(text_surface, (screen_width/2 - 150, screen_height/2 + 20))
+            else:
+                name_rect = pygame.Rect(screen_width/2 - 35 - len(player_name) * 10, screen_height/2 + 14, len(player_name) * 28, 50)
+                pygame.draw.rect(screen, 'yellow', name_rect, 2)
+                text_surface = name_font.render(player_name, True, (255, 255, 255))
+                screen.blit(text_surface, (screen_width/2 - 30 - \
+                    len(player_name) * 10, screen_height/2 + 20))
+            pygame.display.update()
+
         if timer_tick_count >= FPS:
             timer_tick_count = 0
             if not time_paused:
@@ -195,7 +212,7 @@ def main() -> None:
                         buttons = display_instructions(screen, CELL_SIZE, screen_width, screen_height)
                     elif buttons[2].collidepoint(event.pos):
                         game_state = 'high_score'
-                        buttons = display_high_scores(screen, CELL_SIZE, screen_width, screen_height)
+                        buttons = display_high_scores(screen, CELL_SIZE, screen_width, screen_height, con['highscore_filename'])
                     elif buttons[3].collidepoint(event.pos):
                         pygame.quit()
                         exit()
@@ -226,7 +243,9 @@ def main() -> None:
                         game_state = 'playing'
                         cheat_mode_buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
                     elif buttons[1].collidepoint(event.pos):
-                        game_state = 'name_entry'
+                        game_state = 'menu'
+                        buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+                        #game_state = 'name_entry'
                         #input_rect = pygame.Rect(screen_width/2, screen_height/2, 600, 900)
                         #pygame.draw.rect(screen, (255, 0, 0), input_rect)
                 elif game_state == 'instructions':
@@ -237,6 +256,7 @@ def main() -> None:
                     if buttons[0].collidepoint(event.pos):
                         game_state = 'menu'
                         buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+
                 elif game_state == 'name_entry':
                     pass
             elif game_state == 'instructions':
@@ -256,16 +276,19 @@ def main() -> None:
                     game_state = 'submenu'
                     buttons = display_submenu(screen, CELL_SIZE, screen_width, screen_height)
                     pygame.display.update()
-            elif event.type == pygame.KEYDOWN and game_state == 'name_entry':
+            elif event.type == pygame.KEYDOWN and game_state == 'submenu':
                 if event.key == pygame.K_BACKSPACE:
                     player_name = player_name[:-1]
-                elif event.key == pygame.K_KP_ENTER:
+                elif event.key in (pygame.K_KP_ENTER, pygame.K_RETURN):
+                    add_high_score(con['highscore_filename'] ,player_name, player.score)
                     game_state = 'menu'
                     buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
+                    #add_high_score(con['highscore_filename'] ,player_name, player.score)
                 else:
-                    player_name += event.unicode
-                    text_surface = level_font.render(player_name, True, (255, 255, 255))
-                    screen.blit(text_surface, (screen_width/2 - 150, screen_height/2))
+                    if len(player_name) <= 10:
+                        player_name += event.unicode
+                    #text_surface = level_font.render(player_name, True, (255, 255, 255))
+                    #screen.blit(text_surface, (screen_width/2 - 150, screen_height/2))
         if all(pacgum.eaten for pacgum in pacgums):
             print(f"Level complete! {player.score}")
             level_index += 1
