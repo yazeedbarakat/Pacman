@@ -1,34 +1,34 @@
 import pygame
 
-CELL_SIZE = 30
+from constants import CELL_SIZE
 
 PACMAN_UP_1 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-up/1.png'), (CELL_SIZE - 8, CELL_SIZE - 8))
+    'assets/pacman-up/1.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
 PACMAN_UP_2 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-up/2.png'), (CELL_SIZE - 8, CELL_SIZE - 8))
+    'assets/pacman-up/2.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
 PACMAN_UP_3 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-up/3.png'), (CELL_SIZE - 8, CELL_SIZE - 8))
+    'assets/pacman-up/3.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
 PACMAN_DOWN_1 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-down/1.png'), (CELL_SIZE - 8, CELL_SIZE - 8))
+    'assets/pacman-down/1.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
 PACMAN_DOWN_2 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-down/2.png'), (CELL_SIZE - 8, CELL_SIZE - 8))
+    'assets/pacman-down/2.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
 PACMAN_DOWN_3 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-down/3.png'), (CELL_SIZE - 8, CELL_SIZE - 8))
+    'assets/pacman-down/3.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
 PACMAN_LEFT_1 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-left/1.png'), (CELL_SIZE - 8, CELL_SIZE - 8))
+    'assets/pacman-left/1.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
 PACMAN_LEFT_2 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-left/2.png'), (CELL_SIZE - 8, CELL_SIZE - 8))
+    'assets/pacman-left/2.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
 PACMAN_LEFT_3 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-left/3.png'), (CELL_SIZE - 8, CELL_SIZE - 8))
+    'assets/pacman-left/3.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
 PACMAN_RIGHT_1 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-right/1.png'), (CELL_SIZE - 8, CELL_SIZE - 8))
+    'assets/pacman-right/1.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
 PACMAN_RIGHT_2 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-right/2.png'), (CELL_SIZE - 8, CELL_SIZE - 8))
+    'assets/pacman-right/2.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
 PACMAN_RIGHT_3 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-right/3.png'), (CELL_SIZE - 8, CELL_SIZE - 8))
+    'assets/pacman-right/3.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
 
 
-class Player:
+class Pacman:
     def __init__(self, grid: list[list[int]], width: int, height: int) -> None:
         self.grid = grid
         self.center: tuple[int, int] = (width // 2, height // 2)
@@ -77,3 +77,13 @@ class Player:
 
     def update_frame(self) -> None:
         self.frame_index = (self.frame_index + 1) % 3
+
+    def draw_pacman(
+        self, screen: pygame.Surface, frame_tick_count: int, maze_x: int, maze_y: int
+    ) -> None:
+        draw_x = self.prev_position[0] + (
+            self.position[0] - self.prev_position[0]) * frame_tick_count / 10
+        draw_y = self.prev_position[1] + (
+            self.position[1] - self.prev_position[1]) * frame_tick_count / 10
+        screen.blit(self.get_frame(), (
+            draw_x * CELL_SIZE + 8 + maze_x, draw_y * CELL_SIZE + 8 + maze_y))

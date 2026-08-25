@@ -8,7 +8,7 @@ from ghost import Ghost
 class GhostRenderer:
     def __init__(self, cell_size: int = 18) -> None:
         self.cell_size: int = cell_size
-        self.ghost_size: int = cell_size - 8
+        self.ghost_size: int = cell_size - 16
         self.center_offset: int = (cell_size - self.ghost_size) // 2
         self.ghost_images: Dict[str, pygame.Surface] = {}
         self._load_ghost_images()
@@ -49,10 +49,10 @@ class GhostRenderer:
 
         if ghost.state == "escape":
             screen.blit(self.ghost_images['blue'],
-                        (gx * self.cell_size + 4, gy * self.cell_size + 4))
+                        (gx * self.cell_size + 8, gy * self.cell_size + 8))
         elif ghost.state == "chasing":
             screen.blit(self.ghost_images[ghost_name],
-                        (gx * self.cell_size + 4, gy * self.cell_size + 4))
+                        (gx * self.cell_size + 8, gy * self.cell_size + 8))
 
     def draw_ghosts(
         self,

@@ -1,0 +1,90 @@
+from typing import Any
+from mazegenerator import MazeGenerator  # type: ignore[import-untyped]
+import pygame
+
+from constants import CELL_SIZE
+
+pygame.init()
+
+
+def maze_loader(maze_size: tuple[int, int], maze_seed: int) -> dict[str, Any]:
+    mg = MazeGenerator(size=maze_size, seed=maze_seed)
+    maze: dict[str, Any] = {}
+    maze['grid'] = mg.maze
+    maze['maze_entry'] = mg.maze_entry
+    maze['maze_exit'] = mg.maze_exit
+    return maze
+
+
+class Pacgum:
+    def __init__(self, position: tuple[int, int]) -> None:
+        self.position: tuple[int, int] = position
+        self.eaten: bool = False
+        self.points = 10
+
+    def eat(self) -> int:
+        self.eaten = True
+        return self.points
+
+
+class SuperPacgum(Pacgum):
+    def __init__(self, position: tuple[int, int]) -> None:
+        super().__init__(position)
+        self.points = 50
+
+
+def place_pacgums(maze_size: tuple[int, int], maze_grid: list[list[int]]) -> list[Pacgum]:
+    pacgums: list[Pacgum | SuperPacgum] = []
+    corners: list[tuple[int, int]] = [
+        (0, 0), (maze_size[0] - 1, 0), (0, maze_size[1] - 1),
+        (maze_size[0] - 1, maze_size[1] - 1)
+    ]
+    for row in range(maze_size[1]):
+        for col in range(maze_size[0]):
+            if maze_grid[row][col] != 0xF and not (col, row) in corners:
+                pacgums.append(Pacgum((col, row)))
+    for cor in corners:
+        pacgums.append(SuperPacgum(cor))
+    return pacgums
+
+
+def draw_pacgums(
+    screen: pygame.Surface, pacgums: list[Pacgum], maze_x: int, maze_y: int
+) -> None:
+    rad = 3
+    for pacgum in pacgums:
+        if not pacgum.eaten:
+            if isinstance(pacgum, SuperPacgum):
+                rad = 6
+            pygame.draw.circle(
+                screen, 'yellow',
+                (pacgum.position[0] * CELL_SIZE + CELL_SIZE // 2 + maze_x,
+                 pacgum.position[1] * CELL_SIZE + CELL_SIZE // 2 + maze_y),
+                rad)
+
+
+def draw_maze(
+    screen: pygame.Surface, maze: dict[str, Any], maze_x: int, maze_y: int
+) -> None:
+    for y, row in enumerate(maze['grid']):
+        for x, cell in enumerate(row):
+            sx, sy = x * CELL_SIZE + maze_x, y * CELL_SIZE + maze_y
+            if cell == 0xF:
+                pygame.draw.rect(screen, 'grey', (sx, sy, CELL_SIZE, CELL_SIZE))
+                continue
+            else:
+                pygame.draw.rect(screen, 'dark blue', (sx, sy, CELL_SIZE, CELL_SIZE))
+            if not (cell & 0x1):
+                pygame.draw.rect(screen, 'black', (sx + 4, sy, CELL_SIZE - 8,
+                                                   CELL_SIZE // 2))
+            if not (cell & 0x2):
+                pygame.draw.rect(screen, 'black', (sx + CELL_SIZE // 2, sy + 4,
+                                                   CELL_SIZE // 2, CELL_SIZE - 8))
+            if not (cell & 0x4):
+                pygame.draw.rect(screen, 'black', (sx + 4, sy + CELL_SIZE // 2,
+                                                   CELL_SIZE - 8, CELL_SIZE // 2))
+            if not (cell & 0x8):
+                pygame.draw.rect(screen, 'black', (sx, sy + 4,
+                                                   CELL_SIZE // 2, CELL_SIZE - 8))
+            pygame.draw.rect(screen, 'black', (sx + 4, sy + 4,
+                                               CELL_SIZE - 8, CELL_SIZE - 8))
