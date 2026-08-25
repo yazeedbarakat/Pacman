@@ -1,5 +1,3 @@
-from typing import Any
-
 import ghost_renderer as ghost_renderer_module
 from ghost import Ghost
 from high_scores_config import add_high_score
@@ -8,7 +6,7 @@ import pygame
 import maze as m
 from config_parser import read_config
 from menu import display_menu, display_instructions, display_cheat_mode, \
-    display_submenu, display_high_scores, display_save_name
+    display_submenu, display_high_scores, display_save_name, init_gif
 
 con = read_config('config.json')
 pygame.font.init()
@@ -42,6 +40,7 @@ pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'])
 player = player_setup.Player(maze['grid'], maze_width, maze_height)
 ghost_renderer = ghost_renderer_module.GhostRenderer(cell_size=CELL_SIZE)
 level = 0
+init_gif()
 
 
 def make_ghosts(width: int, height: int, level: int) -> list[Ghost]:
@@ -159,6 +158,7 @@ def display_timer(time: int) -> None:
 
 def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
                    shadow_mode: bool, invincible: bool, speed_boost: bool,
+                   time_paused, unlimited_lives,
                    buttons: tuple[pygame.Rect, ...], player_name: str,
                    game_state: str,
                    ghost_tick_count: int) -> tuple[tuple[pygame.Rect, ...], int, str]:
@@ -212,7 +212,9 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
                 return (buttons, level_index, game_state)
             else:
                 switch_level(level_index)
-                buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
+                buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height,
+                    invincible, shadow_mode, speed_boost,
+                    time_paused, unlimited_lives)
     draw_maze(maze, CELL_SIZE)
     draw_pacgums()
     draw_pacman(frame_tick_count)
@@ -236,11 +238,15 @@ def handle_submenu(player_name: str,
 
 
 def handle_menu_buttons(
-    buttons: tuple[pygame.Rect, ...], event: pygame.event.Event, game_state: str
+    buttons: tuple[pygame.Rect, ...], event: pygame.event.Event,
+    game_state: str, invincible:  bool, shadow_mode: bool, speed_boost: bool,
+    time_paused: bool, unlimited_lives: bool
 ) -> tuple[tuple[pygame.Rect, ...], str]:
     if buttons[0].collidepoint(event.pos):
         game_state = 'playing'
-        buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
+        buttons = display_cheat_mode(screen, CELL_SIZE, screen_width,
+            screen_height, invincible, shadow_mode, speed_boost,
+            time_paused, unlimited_lives)
     elif buttons[1].collidepoint(event.pos):
         game_state = 'instructions'
         buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
@@ -258,14 +264,28 @@ def handle_menu_buttons(
 def handle_playing_buttons(
     buttons: tuple[pygame.Rect, ...], event: pygame.event.Event,
     level_index: int, invincible: bool, shadow_mode: bool,
-    speed_boost: bool, time_paused: bool, game_state: str, player_name: str
-) -> tuple[tuple[pygame.Rect, ...], int, bool, bool, bool, bool, str, str]:
+    speed_boost: bool, time_paused: bool, game_state: str, player_name: str,
+    unlimited_lives: bool
+) -> tuple[tuple[pygame.Rect, ...], int, bool, bool, bool, bool, bool, str, str]:
     if buttons[0].collidepoint(event.pos):
         invincible = not (invincible)
+        buttons = display_cheat_mode(screen, CELL_SIZE, screen_width,
+            screen_height, invincible, shadow_mode,
+            speed_boost, time_paused, unlimited_lives)
     elif buttons[1].collidepoint(event.pos):
-        player.lives = 100000
+        unlimited_lives = not (unlimited_lives)
+        if unlimited_lives:
+            player.lives = 1000000
+        else:
+            player.lives = 3
+        buttons = display_cheat_mode(screen, CELL_SIZE, screen_width,
+            screen_height, invincible, shadow_mode,
+            speed_boost, time_paused, unlimited_lives)
     elif buttons[2].collidepoint(event.pos):
         shadow_mode = not (shadow_mode)
+        buttons = display_cheat_mode(screen, CELL_SIZE, screen_width,
+            screen_height, invincible, shadow_mode,
+            speed_boost, time_paused, unlimited_lives)
     elif buttons[3].collidepoint(event.pos):
         level_index += 1
         if level_index >= len(con['levels']):
@@ -275,28 +295,33 @@ def handle_playing_buttons(
                     speed_boost, time_paused, game_state, player_name)
         else:
             switch_level(level_index)
-            buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
+            buttons = display_cheat_mode(screen, CELL_SIZE, screen_width,
+                screen_height, invincible, shadow_mode,
+                speed_boost, time_paused, unlimited_lives)
     elif buttons[4].collidepoint(event.pos):
         time_paused = not (time_paused)
-        if time_paused:
-            pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(
-                screen_width/2 + 800, screen_height/2, 20, 20), border_radius=50)
-        else:
-            pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(
-                screen_width/2 + 800, screen_height/2, 20, 20), border_radius=50)
+        buttons = display_cheat_mode(screen, CELL_SIZE, screen_width,
+            screen_height, invincible, shadow_mode,
+            speed_boost, time_paused, unlimited_lives)
     elif buttons[5].collidepoint(event.pos):
         speed_boost = not (speed_boost)
+        buttons = display_cheat_mode(screen, CELL_SIZE, screen_width,
+            screen_height, invincible, shadow_mode,
+            speed_boost, time_paused, unlimited_lives)
     return (buttons, level_index, invincible, shadow_mode,
-            speed_boost, time_paused, game_state, player_name)
+            speed_boost, time_paused, unlimited_lives, game_state, player_name)
 
 
 def handle_submenu_buttons(
     buttons: tuple[pygame.Rect, ...], event: pygame.event.Event, game_state: str,
-    player_name: str
+    player_name: str, invincible:  bool, shadow_mode: bool, speed_boost: bool,
+    time_paused: bool, unlimited_lives
 ) -> tuple[tuple[pygame.Rect, ...], str]:
     if buttons[0].collidepoint(event.pos):
         game_state = 'playing'
-        buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height)
+        buttons = display_cheat_mode(screen, CELL_SIZE, screen_width, screen_height,
+            invincible, shadow_mode, speed_boost,
+            time_paused, unlimited_lives)
     elif buttons[1].collidepoint(event.pos):
         game_state = 'name_input'
         display_save_name(player_name, screen, screen_width, screen_height)
@@ -314,6 +339,7 @@ def main() -> None:
     invincible = False
     shadow_mode = False
     speed_boost = False
+    unlimited_lives = False
     player_name = ''
     ghost_tick_count = 0
     set_game()
@@ -327,7 +353,7 @@ def main() -> None:
         if game_state == 'playing':
             buttons, level_index, game_state = handle_playing(
                 frame_tick_count, level_time, level_index, shadow_mode,
-                invincible, speed_boost, buttons, player_name, game_state,
+                invincible, speed_boost, time_paused, unlimited_lives, buttons, player_name, game_state,
                 ghost_tick_count)
         elif game_state == 'submenu':
             buttons = handle_submenu(player_name, buttons)
@@ -341,11 +367,12 @@ def main() -> None:
             ghost_tick_count = 0
         if timer_tick_count >= FPS:
             timer_tick_count = 0
-            if not time_paused:
+            if not time_paused and game_state == 'playing':
                 level_time -= 1
             if level_time <= 0:
-                pygame.quit()
-                exit()
+                game_state = "name_input"
+                display_save_name(player_name, screen, screen_width, screen_height)
+                pygame.display.update()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -356,18 +383,23 @@ def main() -> None:
                     level_index = 0
                     frame_tick_count = 0
                     ghost_tick_count = 0
+                    player_name = ''
                     set_game()
-                    buttons, game_state = handle_menu_buttons(buttons, event, game_state)
+                    buttons, game_state = handle_menu_buttons(buttons, event,
+                        game_state, invincible, shadow_mode, speed_boost,
+                        time_paused, unlimited_lives)
                 elif game_state == 'playing':
                     (buttons, level_index, invincible, shadow_mode,
-                     speed_boost, time_paused, game_state,
+                     speed_boost, time_paused, unlimited_lives, game_state,
                      player_name) = handle_playing_buttons(
                         buttons, event, level_index, invincible,
                         shadow_mode, speed_boost, time_paused, game_state,
-                        player_name)
+                        player_name, unlimited_lives)
                 elif game_state == 'submenu':
                     buttons, game_state = handle_submenu_buttons(
-                        buttons, event, game_state, player_name)
+                        buttons, event, game_state, player_name,
+                        invincible, shadow_mode, speed_boost,
+                        time_paused, unlimited_lives)
                 elif game_state == 'instructions':
                     if buttons[0].collidepoint(event.pos):
                         game_state = 'menu'
@@ -393,7 +425,7 @@ def main() -> None:
             elif event.type == pygame.KEYDOWN and game_state == 'name_input':
                 if event.key == pygame.K_BACKSPACE:
                     player_name = player_name[:-1]
-                elif event.key in (pygame.K_KP_ENTER, pygame.K_RETURN):
+                elif event.key in (pygame.K_KP_ENTER, pygame.K_RETURN) and player_name != '':
                     add_high_score(con['highscore_filename'], player_name, player.score)
                     game_state = 'menu'
                     buttons = display_menu(screen, CELL_SIZE, screen_width, screen_height)
