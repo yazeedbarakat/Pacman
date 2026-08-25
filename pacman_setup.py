@@ -29,7 +29,16 @@ PACMAN_RIGHT_3 = pygame.transform.scale(pygame.image.load(
 
 
 class Pacman:
+    """The player character: grid movement, lives/score, and sprite animation."""
+
     def __init__(self, grid: list[list[int]], width: int, height: int) -> None:
+        """Spawn Pacman at the maze center, nudging off any wall cell.
+
+        Args:
+            grid: The maze's wall bitmask grid.
+            width: Maze width in cells.
+            height: Maze height in cells.
+        """
         self.grid = grid
         self.center: tuple[int, int] = (width // 2, height // 2)
         if self.grid[self.center[1]][self.center[0]] == 0xF:
@@ -50,6 +59,12 @@ class Pacman:
         }
 
     def move(self, steps: int) -> None:
+        """Advance up to `steps` cells in the current direction, stopping at walls.
+
+        Args:
+            steps: Number of grid cells to attempt to move (1 normally,
+                2 with the speed-boost cheat).
+        """
         dir_map = {
             '': (0x0, 0, 0),
             'U': (0x1, 0, -1),
@@ -65,22 +80,44 @@ class Pacman:
                              self.position[1] + dir_map[self.cur_dir][2])
 
     def respawn(self) -> bool:
+        """Lose a life and reset to the maze center.
+
+        Returns:
+            True if Pacman still has lives remaining, False if this
+            was the last life.
+        """
         self.lives -= 1
         self.position = self.center
         self.prev_position = self.center
         return self.lives > 0
 
     def get_frame(self) -> pygame.Surface:
+        """Get the current animation frame for the current facing direction.
+
+        Returns:
+            The sprite surface to draw; defaults to the idle-left
+            frame if no direction has been set yet.
+        """
         if self.cur_dir == '':
             return self.frames['L'][0]
         return self.frames[self.cur_dir][self.frame_index]
 
     def update_frame(self) -> None:
+        """Advance the walking animation to the next of its 3 frames."""
         self.frame_index = (self.frame_index + 1) % 3
 
     def draw_pacman(
         self, screen: pygame.Surface, frame_tick_count: int, maze_x: int, maze_y: int
     ) -> None:
+        """Draw Pacman, interpolated between its previous and current cell.
+
+        Args:
+            screen: Surface to draw onto.
+            frame_tick_count: Tick within the movement cycle (1-10),
+                used to interpolate the on-screen position.
+            maze_x: Pixel x-offset of the maze's top-left corner.
+            maze_y: Pixel y-offset of the maze's top-left corner.
+        """
         draw_x = self.prev_position[0] + (
             self.position[0] - self.prev_position[0]) * frame_tick_count / 10
         draw_y = self.prev_position[1] + (

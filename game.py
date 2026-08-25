@@ -15,6 +15,14 @@ pygame.font.init()
 
 
 def get_level_config(level_index: int) -> tuple[int, int]:
+    """Look up a level's maze dimensions from the loaded config.
+
+    Args:
+        level_index: 0-based index into `con['levels']`.
+
+    Returns:
+        (width, height) of that level's maze in cells.
+    """
     level = con['levels'][level_index]
     width = level['width']
     height = level['height']
@@ -41,11 +49,32 @@ init_gif()
 
 
 def make_ghosts(width: int, height: int, level: int) -> list[Ghost]:
+    """Create the 4 ghosts, one spawned at each maze corner.
+
+    Args:
+        width: Maze width in cells.
+        height: Maze height in cells.
+        level: Current level, used to scale each ghost's difficulty.
+
+    Returns:
+        The 4 newly created Ghost instances.
+    """
     corners = [(0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)]
     return [Ghost(cx, cy, 1, maze['grid'], level) for cx, cy in corners]
 
 
 def get_ghost_move_interval(level_index: int) -> int:
+    """Get how many render ticks a ghost's movement cycle spans at this level.
+
+    Higher levels get a shorter interval, so ghosts move faster as
+    the game progresses.
+
+    Args:
+        level_index: 0-based current level index.
+
+    Returns:
+        Ticks per ghost movement cycle (minimum 1).
+    """
     num_levels = len(con['levels'])
     return max(1, num_levels - level_index)
 
@@ -54,6 +83,12 @@ ghosts = make_ghosts(maze_width, maze_height, level)
 
 
 def set_game() -> None:
+    """Reset all game state to a fresh start at level 0.
+
+    Rebuilds the maze, pacgums, pacman, ghosts, and level timer used
+    by the main loop. Called on startup and whenever the player
+    returns to the main menu.
+    """
     global maze_width, maze_height, maze, pacgums, pacman, level_time, ghosts
     maze_width, maze_height = get_level_config(level_index=0)
     maze = m.maze_loader((maze_width, maze_height), 42)
@@ -64,6 +99,14 @@ def set_game() -> None:
 
 
 def switch_level(level_index: int) -> None:
+    """Advance to a new level, carrying over the player's score and lives.
+
+    Rebuilds the maze, pacgums, and ghosts for the new level, resets
+    the level timer, and re-centers the maze on screen.
+
+    Args:
+        level_index: 0-based index of the level to switch to.
+    """
     global maze_width, maze_height, maze, pacgums, pacman, level_time, x_cor, ghosts
     maze_width, maze_height = get_level_config(level_index)
     x_cor = screen_width // 2 - maze_width * CELL_SIZE // 2
@@ -83,6 +126,28 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
                    time_paused: bool, buttons: tuple[pygame.Rect, ...],
                    player_name: str, game_state: str,
                    ghost_tick_count: int) -> tuple[tuple[pygame.Rect, ...], int, str]:
+    """Advance and draw one frame of active gameplay.
+
+    Updates ghosts, moves and animates pacman, resolves pacgum and
+    ghost collisions, and handles level-complete/game-over transitions,
+    then draws the current frame.
+
+    Args:
+        frame_tick_count: Tick within pacman's movement cycle (1-10).
+        level_time: Seconds remaining in the current level.
+        level_index: 0-based index of the current level.
+        shadow_mode: Cheat flag that freezes ghost movement.
+        invincible: Cheat flag that disables ghost collisions.
+        speed_boost: Cheat flag that doubles pacman's move speed.
+        time_paused: Cheat flag that pauses the level timer.
+        buttons: Current cheat-mode panel button rects.
+        player_name: Name entered so far, used if this frame ends the game.
+        game_state: Current game state string.
+        ghost_tick_count: Tick within the ghost movement cycle.
+
+    Returns:
+        (buttons, level_index, game_state), updated for the next frame.
+    """
     for ghost in ghosts:
         if not (shadow_mode) and ghost_tick_count == 1:
             ghost.update(pacman.position)
@@ -151,6 +216,17 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
 
 def handle_submenu(player_name: str,
                    buttuns: tuple[pygame.Rect, ...]) -> tuple[pygame.Rect, ...]:
+    """Redraw the pause submenu for the current frame.
+
+    Args:
+        player_name: Unused; kept for call-site symmetry with the
+            other handle_* functions.
+        buttuns: Unused; kept for call-site symmetry with the other
+            handle_* functions.
+
+    Returns:
+        The submenu's button rects, for click handling.
+    """
     buttons = display_submenu()
     pygame.display.update()
     return buttons
@@ -161,6 +237,22 @@ def handle_menu_buttons(
     game_state: str, invincible:  bool, shadow_mode: bool, speed_boost: bool,
     time_paused: bool
 ) -> tuple[tuple[pygame.Rect, ...], str]:
+    """Handle a mouse click on the main menu, dispatching to the clicked button.
+
+    Args:
+        buttons: Main menu button rects (play, instructions, high
+            scores, exit) to test the click against.
+        event: The MOUSEBUTTONDOWN event to handle.
+        game_state: Current game state string.
+        invincible: Current invincibility cheat toggle state.
+        shadow_mode: Current shadow-mode cheat toggle state.
+        speed_boost: Current speed-boost cheat toggle state.
+        time_paused: Current pause-timer cheat toggle state.
+
+    Returns:
+        (buttons, game_state), updated for whichever screen was
+        entered by the click.
+    """
     if buttons[0].collidepoint(event.pos):
         game_state = 'playing'
         buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
@@ -182,6 +274,27 @@ def handle_playing_buttons(
     level_index: int, invincible: bool, shadow_mode: bool,
     speed_boost: bool, time_paused: bool, game_state: str, player_name: str
 ) -> tuple[tuple[pygame.Rect, ...], int, bool, bool, bool, bool, str, str]:
+    """Handle a mouse click on the in-game cheat-mode panel.
+
+    Dispatches to skip level, add a life, or toggle one of the
+    shadow/invincibility/pause/speed-boost cheats, based on which
+    button rect the click landed in.
+
+    Args:
+        buttons: Cheat-mode panel button rects to test the click against.
+        event: The MOUSEBUTTONDOWN event to handle.
+        level_index: 0-based index of the current level.
+        invincible: Current invincibility cheat toggle state.
+        shadow_mode: Current shadow-mode cheat toggle state.
+        speed_boost: Current speed-boost cheat toggle state.
+        time_paused: Current pause-timer cheat toggle state.
+        game_state: Current game state string.
+        player_name: Name entered so far, used if skipping the last level.
+
+    Returns:
+        (buttons, level_index, invincible, shadow_mode, speed_boost,
+        time_paused, game_state, player_name), updated per the cheat toggled.
+    """
     if buttons[0].collidepoint(event.pos):
         level_index += 1
         if level_index >= len(con['levels']):
@@ -217,6 +330,22 @@ def handle_submenu_buttons(
     player_name: str, invincible:  bool, shadow_mode: bool, speed_boost: bool,
     time_paused: bool
 ) -> tuple[tuple[pygame.Rect, ...], str]:
+    """Handle a mouse click on the pause submenu, dispatching to the clicked button.
+
+    Args:
+        buttons: Submenu button rects (continue, save & quit) to test
+            the click against.
+        event: The MOUSEBUTTONDOWN event to handle.
+        game_state: Current game state string.
+        player_name: Name entered so far, used if saving and quitting.
+        invincible: Current invincibility cheat toggle state.
+        shadow_mode: Current shadow-mode cheat toggle state.
+        speed_boost: Current speed-boost cheat toggle state.
+        time_paused: Current pause-timer cheat toggle state.
+
+    Returns:
+        (buttons, game_state), updated for whichever option was clicked.
+    """
     if buttons[0].collidepoint(event.pos):
         game_state = 'playing'
         buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
@@ -227,6 +356,12 @@ def handle_submenu_buttons(
 
 
 def main() -> None:
+    """Run the game: set up the window and menu, then loop until the player quits.
+
+    Owns the top-level state machine (menu/playing/submenu/name_input/
+    instructions/high_score), the frame clock, and all pygame event
+    dispatch (mouse clicks and keyboard input).
+    """
     global level_time
     frame_tick_count = 0
     timer_tick_count = 0

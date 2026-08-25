@@ -17,6 +17,18 @@ DEFAULT_CONFIG = {
 
 
 def read_config(filename: str) -> Dict[str, Any]:
+    """Load and validate the game config from a JSON file with '#' comments.
+
+    Missing or mistyped keys fall back to DEFAULT_CONFIG, each with a
+    printed warning, so a bad config file degrades instead of crashing.
+
+    Args:
+        filename: Path to the JSON config file to read.
+
+    Returns:
+        A config dict containing every key from DEFAULT_CONFIG, using
+        values from the file where present and valid.
+    """
     try:
         with open(filename, 'r') as file:
             lines = file.readlines()

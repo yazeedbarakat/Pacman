@@ -8,6 +8,16 @@ pygame.init()
 
 
 def maze_loader(maze_size: tuple[int, int], maze_seed: int) -> dict[str, Any]:
+    """Generate a maze using the external MazeGenerator package.
+
+    Args:
+        maze_size: (width, height) of the maze in cells.
+        maze_seed: Seed for reproducible maze generation.
+
+    Returns:
+        A dict with 'grid' (the wall bitmask grid), 'maze_entry', and
+        'maze_exit'.
+    """
     mg = MazeGenerator(size=maze_size, seed=maze_seed)
     maze: dict[str, Any] = {}
     maze['grid'] = mg.maze
@@ -17,23 +27,51 @@ def maze_loader(maze_size: tuple[int, int], maze_seed: int) -> dict[str, Any]:
 
 
 class Pacgum:
+    """A single collectible pellet worth points when eaten."""
+
     def __init__(self, position: tuple[int, int]) -> None:
+        """Place a pacgum at the given grid position.
+
+        Args:
+            position: (x, y) grid cell the pacgum occupies.
+        """
         self.position: tuple[int, int] = position
         self.eaten: bool = False
         self.points = 10
 
     def eat(self) -> int:
+        """Mark the pacgum as eaten and return the points it's worth.
+
+        Returns:
+            The number of points earned.
+        """
         self.eaten = True
         return self.points
 
 
 class SuperPacgum(Pacgum):
+    """A pacgum worth more points that also makes ghosts edible."""
+
     def __init__(self, position: tuple[int, int]) -> None:
+        """Place a super-pacgum at the given grid position.
+
+        Args:
+            position: (x, y) grid cell the super-pacgum occupies.
+        """
         super().__init__(position)
         self.points = 50
 
 
 def place_pacgums(maze_size: tuple[int, int], maze_grid: list[list[int]]) -> list[Pacgum]:
+    """Fill every non-wall cell with a pacgum, and each corner with a super-pacgum.
+
+    Args:
+        maze_size: (width, height) of the maze in cells.
+        maze_grid: The maze's wall bitmask grid.
+
+    Returns:
+        The list of placed Pacgum and SuperPacgum instances.
+    """
     pacgums: list[Pacgum | SuperPacgum] = []
     corners: list[tuple[int, int]] = [
         (0, 0), (maze_size[0] - 1, 0), (0, maze_size[1] - 1),
@@ -51,6 +89,14 @@ def place_pacgums(maze_size: tuple[int, int], maze_grid: list[list[int]]) -> lis
 def draw_pacgums(
     screen: pygame.Surface, pacgums: list[Pacgum], maze_x: int, maze_y: int
 ) -> None:
+    """Draw every uneaten pacgum, drawing super-pacgums larger.
+
+    Args:
+        screen: Surface to draw onto.
+        pacgums: Pacgums (and super-pacgums) to draw.
+        maze_x: Pixel x-offset of the maze's top-left corner.
+        maze_y: Pixel y-offset of the maze's top-left corner.
+    """
     rad = 3
     for pacgum in pacgums:
         if not pacgum.eaten:
@@ -66,6 +112,17 @@ def draw_pacgums(
 def draw_maze(
     screen: pygame.Surface, maze: dict[str, Any], maze_x: int, maze_y: int
 ) -> None:
+    """Draw the maze grid, rendering walls per-cell from the wall bitmask.
+
+    Each cell's low 4 bits mark open sides (up/right/down/left); a
+    missing bit is drawn as a black wall segment on that side.
+
+    Args:
+        screen: Surface to draw onto.
+        maze: Maze dict as returned by maze_loader, using its 'grid' key.
+        maze_x: Pixel x-offset of the maze's top-left corner.
+        maze_y: Pixel y-offset of the maze's top-left corner.
+    """
     for y, row in enumerate(maze['grid']):
         for x, cell in enumerate(row):
             sx, sy = x * CELL_SIZE + maze_x, y * CELL_SIZE + maze_y

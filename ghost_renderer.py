@@ -6,7 +6,15 @@ from ghost import Ghost
 
 
 class GhostRenderer:
+    """Loads ghost sprite images once and draws ghosts scaled to the maze grid."""
+
     def __init__(self, cell_size: int = 18) -> None:
+        """Load and scale every ghost sprite for the given cell size.
+
+        Args:
+            cell_size: Maze cell size in pixels; sprites are scaled to
+                fit inside a cell with a small border.
+        """
         self.cell_size: int = cell_size
         self.ghost_size: int = cell_size - 16
         self.center_offset: int = (cell_size - self.ghost_size) // 2
@@ -14,6 +22,12 @@ class GhostRenderer:
         self._load_ghost_images()
 
     def _load_ghost_images(self) -> None:
+        """Load and scale each named ghost sprite, exiting the process on failure.
+
+        A missing file or a pygame load error is treated as fatal
+        (printed and `sys.exit(1)`) since the game can't render
+        without its ghost assets.
+        """
         asset_files = {
             'blinky': 'assets/ghosts/blinky.png',
             'pinky': 'assets/ghosts/pinky.png',
@@ -44,6 +58,19 @@ class GhostRenderer:
         tick: int = 0,
         cycle_length: int = 10,
     ) -> None:
+        """Draw a single ghost, interpolated between its previous and current cell.
+
+        Blue "escape" sprite is used when the ghost is edible; nothing
+        is drawn while it's respawning.
+
+        Args:
+            screen: Surface to draw onto.
+            ghost: The ghost to draw.
+            ghost_name: Which named sprite to use while chasing.
+            tick: Current tick within the movement cycle, used for
+                interpolating the on-screen position.
+            cycle_length: Total ticks per movement cycle.
+        """
         gx = ghost.prev_x + (ghost.x - ghost.prev_x) * tick / cycle_length
         gy = ghost.prev_y + (ghost.y - ghost.prev_y) * tick / cycle_length
 
@@ -62,6 +89,16 @@ class GhostRenderer:
         cycle_length: int = 10,
         ghost_names: Optional[List[str]] = None
     ) -> None:
+        """Draw every ghost, cycling through ghost_names for their sprites.
+
+        Args:
+            screen: Surface to draw onto.
+            ghosts: Ghosts to draw, in order.
+            tick: Current tick within the movement cycle.
+            cycle_length: Total ticks per movement cycle.
+            ghost_names: Sprite names to cycle through; defaults to
+                the four classic ghosts if not given.
+        """
         if ghost_names is None:
             ghost_names = ['blinky', 'pinky', 'inky', 'clyde']
 
