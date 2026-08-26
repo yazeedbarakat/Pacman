@@ -359,11 +359,17 @@ def display_score(score: int) -> None:
 def display_hearts(lives: int) -> None:
     """Redraw the lives HUD as up to 3 heart icons.
 
+    Lives beyond the third heart are shown as a "+N" counter next to
+    the hearts instead of extra icons.
+
     Args:
-        lives: Current number of lives remaining (capped at 3 icons).
+        lives: Current number of lives remaining.
     """
     pygame.draw.rect(screen, 'black', pygame.Rect(
-        width/2 - 350, height/2 - 500, 120, 50))
+        width/2 - 360, height/2 - 500, 200, 50))
     hearts = 3 if lives >= 3 else lives
     for i in range(hearts):
         screen.blit(heart, (width/2 - 360 + i * 40, height/2 - 505))
+    if lives > 3:
+        extra = name_font.render(f'+{lives - 3}', True, 'white')
+        screen.blit(extra, (width/2 - 215, height/2 - 495))
