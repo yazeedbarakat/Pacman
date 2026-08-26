@@ -82,19 +82,19 @@ def make_ghosts(width: int, height: int, level: int) -> list[Ghost]:
 
 
 def get_ghost_move_interval(level_index: int) -> int:
-    """Get how many render ticks a ghost's movement cycle spans at this level.
+    """Get how many pacman move cycles a ghost's movement cycle spans.
 
-    Higher levels get a shorter interval, so ghosts move faster as
-    the game progresses.
+    Every level uses the same medium pace: ghosts step once per 3
+    pacman cycles.
 
     Args:
-        level_index: 0-based current level index.
+        level_index: 0-based current level index (unused; kept so the
+            pace could be made level-dependent again).
 
     Returns:
-        Ticks per ghost movement cycle (minimum 1).
+        Pacman move cycles per ghost movement cycle.
     """
-    num_levels = len(con['levels'])
-    return max(2, (num_levels - level_index) // 2)
+    return 3
 
 
 ghosts = make_ghosts(maze_width, maze_height, level)
