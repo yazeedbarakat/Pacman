@@ -61,7 +61,8 @@ maze = m.maze_loader((maze_width, maze_height), con['seed'])
 pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'],
                           con['points_per_pacgum'],
                           con['points_per_super_pacgum'], con['pacgum'])
-pacman = pacman_setup.Pacman(maze['grid'], maze_width, maze_height, con['lives'])
+pacman = pacman_setup.Pacman(
+    maze['grid'], maze_width, maze_height, con['lives'])
 ghost_renderer = ghost_renderer_module.GhostRenderer(cell_size=CELL_SIZE)
 level = 0
 init_gif()
@@ -83,7 +84,8 @@ def make_ghosts(width: int, height: int, level: int) -> list[Ghost]:
     Returns:
         The 4 newly created Ghost instances.
     """
-    corners = [(0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)]
+    corners = [
+        (0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)]
     num_chasers = 1 if level <= 5 else 2
     ghosts = []
     for i, (cx, cy) in enumerate(corners):
@@ -92,22 +94,6 @@ def make_ghosts(width: int, height: int, level: int) -> list[Ghost]:
             ghost.view_range = 0
         ghosts.append(ghost)
     return ghosts
-
-
-def get_ghost_move_interval(level_index: int) -> int:
-    """Get how many pacman move cycles a ghost's movement cycle spans.
-
-    Every level uses the same medium pace: ghosts step once per 3
-    pacman cycles.
-
-    Args:
-        level_index: 0-based current level index (unused; kept so the
-            pace could be made level-dependent again).
-
-    Returns:
-        Pacman move cycles per ghost movement cycle.
-    """
-    return 3
 
 
 ghosts = make_ghosts(maze_width, maze_height, level)
@@ -126,7 +112,8 @@ def set_game() -> None:
     pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'],
                               con['points_per_pacgum'],
                               con['points_per_super_pacgum'], con['pacgum'])
-    pacman = pacman_setup.Pacman(maze['grid'], maze_width, maze_height, con['lives'])
+    pacman = pacman_setup.Pacman(
+        maze['grid'], maze_width, maze_height, con['lives'])
     ghosts = make_ghosts(maze_width, maze_height, level)
     level_time = con['level_max_time']
 
@@ -140,7 +127,8 @@ def switch_level(level_index: int) -> None:
     Args:
         level_index: 0-based index of the level to switch to.
     """
-    global maze_width, maze_height, maze, pacgums, pacman, level_time, x_cor, ghosts
+    global maze_width, maze_height, maze, pacgums, pacman
+    global level_time, x_cor, ghosts
     maze_width, maze_height = get_level_config(level_index)
     x_cor = screen_width // 2 - maze_width * CELL_SIZE // 2
     maze = m.maze_loader((maze_width, maze_height), 0)
@@ -149,18 +137,21 @@ def switch_level(level_index: int) -> None:
                               con['points_per_super_pacgum'], con['pacgum'])
     score = pacman.score
     lives = pacman.lives
-    pacman = pacman_setup.Pacman(maze['grid'], maze_width, maze_height, con['lives'])
+    pacman = pacman_setup.Pacman(
+        maze['grid'], maze_width, maze_height, con['lives'])
     pacman.score = score
     pacman.lives = lives
     ghosts = make_ghosts(maze_width, maze_height, level_index + 1)
     level_time = con['level_max_time']
 
 
-def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
-                   shadow_mode: bool, invincible: bool, speed_boost: bool,
-                   time_paused: bool, buttons: tuple[pygame.Rect, ...],
-                   player_name: str, game_state: str, pacman: pacman_setup.Pacman,
-                   ghost_tick_count: int) -> tuple[tuple[pygame.Rect, ...], int, str]:
+def handle_playing(
+    frame_tick_count: int, level_time: int, level_index: int,
+    shadow_mode: bool, invincible: bool, speed_boost: bool,
+    time_paused: bool, buttons: tuple[pygame.Rect, ...],
+    player_name: str, game_state: str, pacman: pacman_setup.Pacman,
+    ghost_tick_count: int
+) -> tuple[tuple[pygame.Rect, ...], int, str]:
     """Advance and draw one frame of active gameplay.
 
     Updates ghosts, moves and animates pacman, resolves pacgum and
@@ -218,7 +209,7 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
             switch_level(level_index)
             buttons = display_cheat_mode(invincible, shadow_mode,
                                          speed_boost, time_paused)
-    cycle = 10 * get_ghost_move_interval(level_index)
+    cycle = 30
     for ghost in ghosts:
         gx = ghost.prev_x + (ghost.x - ghost.prev_x) * ghost_tick_count / cycle
         gy = ghost.prev_y + (ghost.y - ghost.prev_y) * ghost_tick_count / cycle
@@ -237,8 +228,7 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
     pacman.draw_pacman(screen, frame_tick_count, x_cor, y_cor)
     maze_surface = screen.subsurface(
         (x_cor, y_cor, maze_width * CELL_SIZE, maze_height * CELL_SIZE))
-    ghost_renderer.draw_ghosts(maze_surface, ghosts, ghost_tick_count,
-                               10 * get_ghost_move_interval(level_index))
+    ghost_renderer.draw_ghosts(maze_surface, ghosts, ghost_tick_count, 30)
     display_timer(level_time)
     display_hearts(pacman.lives)
     display_level(level_index + 1)
@@ -247,8 +237,9 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
     return (buttons, level_index, game_state)
 
 
-def handle_submenu(player_name: str,
-                   buttuns: tuple[pygame.Rect, ...]) -> tuple[pygame.Rect, ...]:
+def handle_submenu(
+    player_name: str, buttuns: tuple[pygame.Rect, ...]
+) -> tuple[pygame.Rect, ...]:
     """Redraw the pause submenu for the current frame.
 
     Args:
@@ -270,7 +261,7 @@ def handle_menu_buttons(
     game_state: str, invincible:  bool, shadow_mode: bool, speed_boost: bool,
     time_paused: bool
 ) -> tuple[tuple[pygame.Rect, ...], str]:
-    """Handle a mouse click on the main menu, dispatching to the clicked button.
+    """Handle a mouse click on the main menu, dispatching to the button.
 
     Args:
         buttons: Main menu button rects (play, instructions, high
@@ -288,10 +279,10 @@ def handle_menu_buttons(
     """
     if buttons[0].collidepoint(event.pos):
         game_state = 'playing'
-        buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
+        buttons = display_cheat_mode(
+            invincible, shadow_mode, speed_boost, time_paused)
     elif buttons[1].collidepoint(event.pos):
         game_state = 'instructions'
-        buttons = display_menu()
         buttons = display_instructions()
     elif buttons[2].collidepoint(event.pos):
         game_state = 'high_score'
@@ -337,32 +328,39 @@ def handle_playing_buttons(
                     speed_boost, time_paused, game_state, player_name)
         else:
             switch_level(level_index)
-            buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
+            buttons = display_cheat_mode(
+                invincible, shadow_mode, speed_boost, time_paused)
     elif buttons[1].collidepoint(event.pos):
         pacman.lives += 1
-        buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
+        buttons = display_cheat_mode(
+            invincible, shadow_mode, speed_boost, time_paused)
     elif buttons[2].collidepoint(event.pos):
         shadow_mode = not (shadow_mode)
-        buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
+        buttons = display_cheat_mode(
+            invincible, shadow_mode, speed_boost, time_paused)
     elif buttons[3].collidepoint(event.pos):
         invincible = not (invincible)
-        buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
+        buttons = display_cheat_mode(
+            invincible, shadow_mode, speed_boost, time_paused)
     elif buttons[4].collidepoint(event.pos):
         time_paused = not (time_paused)
-        buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
+        buttons = display_cheat_mode(
+            invincible, shadow_mode, speed_boost, time_paused)
     elif buttons[5].collidepoint(event.pos):
         speed_boost = not (speed_boost)
-        buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
+        buttons = display_cheat_mode(
+            invincible, shadow_mode, speed_boost, time_paused)
     return (buttons, level_index, invincible, shadow_mode,
             speed_boost, time_paused, game_state, player_name)
 
 
 def handle_submenu_buttons(
-    buttons: tuple[pygame.Rect, ...], event: pygame.event.Event, game_state: str,
-    player_name: str, invincible:  bool, shadow_mode: bool, speed_boost: bool,
-    time_paused: bool
+    buttons: tuple[pygame.Rect, ...], event: pygame.event.Event,
+    game_state: str, player_name: str, invincible: bool,
+    shadow_mode: bool, speed_boost: bool, time_paused: bool
 ) -> tuple[tuple[pygame.Rect, ...], str]:
-    """Handle a mouse click on the pause submenu, dispatching to the clicked button.
+    """Handle a mouse click on the pause submenu, dispatching to the
+    clicked button.
 
     Args:
         buttons: Submenu button rects (continue, save & quit) to test
@@ -380,7 +378,8 @@ def handle_submenu_buttons(
     """
     if buttons[0].collidepoint(event.pos):
         game_state = 'playing'
-        buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
+        buttons = display_cheat_mode(
+            invincible, shadow_mode, speed_boost, time_paused)
     elif buttons[1].collidepoint(event.pos):
         game_state = 'name_input'
         display_save_name(player_name, False, pacman.score)
@@ -388,7 +387,7 @@ def handle_submenu_buttons(
 
 
 def main() -> None:
-    """Run the game: set up the window and menu, then loop until the player quits.
+    """Run the game: set up the window and menu, then loop until quit.
 
     Owns the top-level state machine (menu/playing/submenu/name_input/
     instructions/high_score), the frame clock, and all pygame event
@@ -427,7 +426,7 @@ def main() -> None:
             pygame.display.update()
         if frame_tick_count >= 10:
             frame_tick_count = 0
-        ghost_cycle_length = 10 * get_ghost_move_interval(level_index)
+        ghost_cycle_length = 30
         if ghost_tick_count >= ghost_cycle_length:
             ghost_tick_count = 0
         if timer_tick_count >= FPS:
@@ -490,12 +489,17 @@ def main() -> None:
             elif event.type == pygame.KEYDOWN and game_state == 'name_input':
                 if event.key == pygame.K_BACKSPACE:
                     player_name = player_name[:-1]
-                elif event.key in (pygame.K_KP_ENTER, pygame.K_RETURN) and player_name != '':
-                    add_high_score(con['highscore_filename'], player_name, pacman.score)
+                elif (event.key in (pygame.K_KP_ENTER, pygame.K_RETURN)
+                        and player_name != ''):
+                    add_high_score(
+                        con['highscore_filename'], player_name,
+                        pacman.score)
                     game_state = 'menu'
                     buttons = display_menu()
                 else:
-                    if len(player_name) < 10 and (event.unicode.isalnum() or event.unicode == ' '):
+                    if (len(player_name) < 10
+                            and (event.unicode.isalnum()
+                                 or event.unicode == ' ')):
                         player_name += event.unicode
 
 

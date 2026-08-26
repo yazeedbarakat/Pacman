@@ -36,9 +36,12 @@ PACMAN_RIGHT_3 = pygame.transform.scale(pygame.image.load(
 
 
 class Pacman:
-    """The player character: grid movement, lives/score, and sprite animation."""
+    """The player character: grid movement, lives/score, sprite anim."""
 
-    def __init__(self, grid: list[list[int]], width: int, height: int, con_lives: int) -> None:
+    def __init__(
+        self, grid: list[list[int]], width: int, height: int,
+        con_lives: int
+    ) -> None:
         """Spawn Pacman at the maze center, nudging off any wall cell.
 
         Args:
@@ -67,7 +70,8 @@ class Pacman:
         }
 
     def move(self, steps: int) -> None:
-        """Advance up to `steps` cells in the current direction, stopping at walls.
+        """Advance up to `steps` cells in the current direction,
+        stopping at walls.
 
         Args:
             steps: Number of grid cells to attempt to move (1 normally,
@@ -82,7 +86,8 @@ class Pacman:
         }
         self.prev_position = self.position
         for i in range(steps):
-            if self.grid[self.position[1]][self.position[0]] & dir_map[self.cur_dir][0]:
+            if (self.grid[self.position[1]][self.position[0]]
+                    & dir_map[self.cur_dir][0]):
                 break
             self.position = (self.position[0] + dir_map[self.cur_dir][1],
                              self.position[1] + dir_map[self.cur_dir][2])
@@ -115,7 +120,8 @@ class Pacman:
         self.frame_index = (self.frame_index + 1) % 3
 
     def draw_pacman(
-        self, screen: pygame.Surface, frame_tick_count: int, maze_x: int, maze_y: int
+        self, screen: pygame.Surface, frame_tick_count: int,
+        maze_x: int, maze_y: int
     ) -> None:
         """Draw Pacman, interpolated between its previous and current cell.
 

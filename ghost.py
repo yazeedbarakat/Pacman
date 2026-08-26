@@ -142,7 +142,8 @@ class Ghost:
             self.random_move()
             return
 
-        queue: List[Tuple[int, int, List[Tuple[int, int]]]] = [(self.x, self.y, [])]
+        queue: List[Tuple[int, int, List[Tuple[int, int]]]] = [
+            (self.x, self.y, [])]
         visited = {(self.x, self.y)}
         best_path = []
 
@@ -160,10 +161,12 @@ class Ghost:
                 next_x = curr_x + dx
                 next_y = curr_y + dy
 
-                if self.is_valid_move(curr_x, curr_y, next_x, next_y, wall_bit):
+                if self.is_valid_move(
+                        curr_x, curr_y, next_x, next_y, wall_bit):
                     if (next_x, next_y) not in visited:
                         visited.add((next_x, next_y))
-                        queue.append((next_x, next_y, path + [(next_x, next_y)]))
+                        queue.append(
+                            (next_x, next_y, path + [(next_x, next_y)]))
 
         if best_path:
             self.x, self.y = best_path[0]

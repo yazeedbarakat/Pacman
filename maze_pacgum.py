@@ -155,21 +155,29 @@ def draw_maze(
         for x, cell in enumerate(row):
             sx, sy = x * CELL_SIZE + maze_x, y * CELL_SIZE + maze_y
             if cell == 0xF:
-                pygame.draw.rect(screen, 'grey', (sx, sy, CELL_SIZE, CELL_SIZE))
+                pygame.draw.rect(
+                    screen, 'grey', (sx, sy, CELL_SIZE, CELL_SIZE))
                 continue
             else:
-                pygame.draw.rect(screen, 'dark blue', (sx, sy, CELL_SIZE, CELL_SIZE))
+                pygame.draw.rect(
+                    screen, 'dark blue', (sx, sy, CELL_SIZE, CELL_SIZE))
             if not (cell & 0x1):
-                pygame.draw.rect(screen, 'black', (sx + 4, sy, CELL_SIZE - 8,
-                                                   CELL_SIZE // 2))
+                pygame.draw.rect(
+                    screen, 'black',
+                    (sx + 4, sy, CELL_SIZE - 8, CELL_SIZE // 2))
             if not (cell & 0x2):
-                pygame.draw.rect(screen, 'black', (sx + CELL_SIZE // 2, sy + 4,
-                                                   CELL_SIZE // 2, CELL_SIZE - 8))
+                pygame.draw.rect(
+                    screen, 'black',
+                    (sx + CELL_SIZE // 2, sy + 4,
+                     CELL_SIZE // 2, CELL_SIZE - 8))
             if not (cell & 0x4):
-                pygame.draw.rect(screen, 'black', (sx + 4, sy + CELL_SIZE // 2,
-                                                   CELL_SIZE - 8, CELL_SIZE // 2))
+                pygame.draw.rect(
+                    screen, 'black',
+                    (sx + 4, sy + CELL_SIZE // 2,
+                     CELL_SIZE - 8, CELL_SIZE // 2))
             if not (cell & 0x8):
-                pygame.draw.rect(screen, 'black', (sx, sy + 4,
-                                                   CELL_SIZE // 2, CELL_SIZE - 8))
+                pygame.draw.rect(
+                    screen, 'black',
+                    (sx, sy + 4, CELL_SIZE // 2, CELL_SIZE - 8))
             pygame.draw.rect(screen, 'black', (sx + 4, sy + 4,
                                                CELL_SIZE - 8, CELL_SIZE - 8))

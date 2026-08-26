@@ -7,13 +7,14 @@ Split below is derived from `git log --format=%an -- <file>` per file, i.e. who 
 | File | Primary author(s) | Notes |
 |---|---|---|
 | `game.py` | Yazeed (9 commits) | Main loop, event handling, state machine |
-| `menu.py` | Yazeed (8), aalrousa (1) | Menu/HUD screens |
-| `maze.py` | Yazeed (5), aalrousa (1) | Maze loading, pacgum placement |
+| `displays.py` (formerly `menu.py`) | Yazeed (8), aalrousa (1) | Menu/HUD screens |
+| `maze_pacgum.py` (formerly `maze.py`) | Yazeed (5), aalrousa (1) | Maze loading, pacgum placement |
 | `config_parser.py` | aalrousa (3), Yazeed (1) | Config loading and validation |
 | `ghost.py` | Yazeed (3), aalrousa (2) | Ghost AI — see below |
 | `ghost_renderer.py` | Yazeed (3), aalrousa (1) | Ghost sprite rendering |
-| `player_setup.py` | Yazeed (1), aalrousa (1) | Player entity/movement |
+| `pacman_setup.py` (formerly `player_setup.py`) | Yazeed (1), aalrousa (1) | Pacman entity/movement |
 | `high_scores_config.py` | Yazeed (1) | High-score persistence |
+| `constants.py` | Yazeed | Shared rendering constants (new since this table was last drawn up) |
 
 **`ghost.py` ownership note:** the file was deleted and re-added multiple times across both contributors' history before the current version stabilized — flagged in [RISK_ANALYSIS.md](RISK_ANALYSIS.md) as a coordination risk rather than attributed to either person specifically, since git history alone doesn't show who was blocking whom.
 
