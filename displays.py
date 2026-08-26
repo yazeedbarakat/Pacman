@@ -112,16 +112,27 @@ def display_instructions() -> tuple[pygame.Rect]:
     screen.blit(background, (0, 0))
     arrows = pygame.transform.scale(pygame.image.load("assets/menu/arrows.png"),
                                     (260, 260))
-    screen.blit(menu_font.render("- Eat all pacgums to clear the level", True, 'white'),
-                (width/2 - 400, height/2 - 500))
-    screen.blit(menu_font.render("- 3 lives, any mistake costs a life", True, 'white'),
-                (width/2 - 400, height/2 - 440))
-    screen.blit(menu_font.render("- Scoring values pulled from config", True, 'white'),
-                (width/2 - 400, height/2 - 380))
+    rules = [
+        "- Eat all pacgums to clear the level; clear every level to win",
+        "- Touching a chasing ghost costs a life; 0 lives is game over",
+        "- Super-pacgums in the 4 corners make ghosts edible for a while",
+        "- Eat an edible (blue) ghost for bonus points",
+        "- Each level is timed; running out of time ends the game",
+        "- Score, lives, level and time are shown at the top of the screen",
+        "- Press ESC to pause: continue, or save your score and quit",
+        "- When the game ends, enter your name to save your highscore",
+        "- Cheat panel (right side in game) lets reviewers test features",
+        "- Lives, scoring, timer and levels are set in the config file",
+    ]
+    for i, rule in enumerate(rules):
+        screen.blit(menu_font.render(rule, True, 'white'),
+                    (width/2 - 830, height/2 - 480 + i * 55))
 
-    screen.blit(menu_font.render("Use the arrow keys to move", True, 'white'),
-                (width/2 - 200, height/2 - 10))
-    screen.blit(arrows, (width/2 - 130, height/2 - 230))
+    screen.blit(menu_font.render("Move with the arrow keys", True, 'white'),
+                (width/2 + 310, height/2 - 60))
+    screen.blit(menu_font.render("or W A S D", True, 'white'),
+                (width/2 + 400, height/2 - 10))
+    screen.blit(arrows, (width/2 + 320, height/2 - 340))
     back_menu_button = pygame.Rect(width/2 - 160, height/2 + 257, 320, 50)
     pygame.draw.rect(screen, 'black', back_menu_button, border_radius=50)
     screen.blit(yellow_button, (width/2 - 213, height/2 + 180))
