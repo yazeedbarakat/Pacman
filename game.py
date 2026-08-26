@@ -336,8 +336,7 @@ def handle_playing_buttons(
             switch_level(level_index)
             buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
     elif buttons[1].collidepoint(event.pos):
-        if pacman.lives < con['lives']:
-            pacman.lives += 1
+        pacman.lives += 1
         buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
     elif buttons[2].collidepoint(event.pos):
         shadow_mode = not (shadow_mode)
