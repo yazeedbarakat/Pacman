@@ -6,6 +6,7 @@ bitmasks.
 """
 
 import random
+import sys
 from typing import Any
 from mazegenerator import MazeGenerator
 import pygame
@@ -24,9 +25,14 @@ def maze_loader(maze_size: tuple[int, int], maze_seed: int) -> dict[str, Any]:
 
     Returns:
         A dict with 'grid' (the wall bitmask grid), 'maze_entry', and
-        'maze_exit'.
+        'maze_exit'. Exits cleanly if the external generator fails.
     """
-    mg = MazeGenerator(size=maze_size, seed=maze_seed)
+    try:
+        mg = MazeGenerator(size=maze_size, seed=maze_seed)
+    except Exception as e:
+        print(f'Error: maze generation failed: {e}')
+        pygame.quit()
+        sys.exit(1)
     maze: dict[str, Any] = {}
     maze['grid'] = mg.maze
     maze['maze_entry'] = mg.maze_entry

@@ -6,17 +6,23 @@ progression, cheat mode, and all pygame event dispatch.
 """
 
 import sys
-import ghost_renderer as ghost_renderer_module
-from ghost import Ghost
-from high_scores_config import add_high_score
-import pacman_setup
 import pygame
-import maze_pacgum as m
-from config_parser import read_config
-from constants import CELL_SIZE
-from displays import display_menu, display_instructions, display_cheat_mode, \
-    display_submenu, display_high_scores, display_save_name, init_gif, \
-    init_display, display_hearts, display_level, display_timer, display_score
+
+try:
+    import ghost_renderer as ghost_renderer_module
+    from ghost import Ghost
+    from high_scores_config import add_high_score
+    import pacman_setup
+    import maze_pacgum as m
+    from config_parser import read_config
+    from constants import CELL_SIZE
+    from displays import display_menu, display_instructions, \
+        display_cheat_mode, display_submenu, display_high_scores, \
+        display_save_name, init_gif, init_display, display_hearts, \
+        display_level, display_timer, display_score
+except (FileNotFoundError, pygame.error) as e:
+    print(f'Error: failed to load a game asset: {e}')
+    sys.exit(1)
 
 if len(sys.argv) != 2:
     print('Usage: python3 game.py <config_file.json>')
@@ -499,4 +505,13 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('\nInterrupted. Goodbye!')
+        pygame.quit()
+        sys.exit(0)
+    except Exception as e:
+        print(f'Unexpected error: {e}')
+        pygame.quit()
+        sys.exit(1)
