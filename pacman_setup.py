@@ -31,7 +31,7 @@ PACMAN_RIGHT_3 = pygame.transform.scale(pygame.image.load(
 class Pacman:
     """The player character: grid movement, lives/score, and sprite animation."""
 
-    def __init__(self, grid: list[list[int]], width: int, height: int) -> None:
+    def __init__(self, grid: list[list[int]], width: int, height: int, con_lives: int) -> None:
         """Spawn Pacman at the maze center, nudging off any wall cell.
 
         Args:
@@ -46,7 +46,7 @@ class Pacman:
                 self.center = (self.center[0] - 1, self.center[1])
         self.position: tuple[int, int] = self.center
         self.prev_position: tuple[int, int] = self.center
-        self.lives: int = 3
+        self.lives: int = con_lives
         self.cur_dir: str = ''
         self.nxt_dir: str = ''
         self.score: int = 0
@@ -73,7 +73,7 @@ class Pacman:
             'L': (0x8, -1, 0)
         }
         self.prev_position = self.position
-        for _ in range(steps):
+        for i in range(steps):
             if self.grid[self.position[1]][self.position[0]] & dir_map[self.cur_dir][0]:
                 break
             self.position = (self.position[0] + dir_map[self.cur_dir][1],
