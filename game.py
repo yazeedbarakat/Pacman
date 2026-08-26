@@ -172,7 +172,11 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
         (buttons, level_index, game_state), updated for the next frame.
     """
     for ghost in ghosts:
-        if not (shadow_mode) and ghost_tick_count == 1:
+        if shadow_mode:
+            # frozen: sync prev to current so the interpolated draw
+            # doesn't slide the ghost back and forth every cycle
+            ghost.prev_x, ghost.prev_y = ghost.x, ghost.y
+        elif ghost_tick_count == 1:
             ghost.update(pacman.position)
     if frame_tick_count in (1, 4, 7):
 
