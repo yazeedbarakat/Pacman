@@ -213,20 +213,6 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
                 if isinstance(pacgum, m.SuperPacgum):
                     for ghost in ghosts:
                         ghost.make_edible()
-        for ghost in ghosts:
-            ghost_cell = (ghost.x, ghost.y)
-            swapped = ((ghost.prev_x, ghost.prev_y) == pacman.position
-                       and ghost_cell == pacman.prev_position)
-            if ghost_cell in traversed or swapped:
-                if ghost.state == "escape":
-                    ghost.get_eaten()
-                    pacman.score += con['points_per_ghost']
-                elif ghost.state == "chasing" and not invincible:
-                    if not pacman.respawn():
-                        game_state = "name_input"
-                        display_save_name(player_name, False, pacman.score)
-                        pygame.display.update()
-                        return (buttons, level_index, game_state)
         if all(pacgum.eaten for pacgum in pacgums):
             level_index += 1
             if level_index >= len(con['levels']):
@@ -237,6 +223,24 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
             else:
                 switch_level(level_index)
                 buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
+    pac_x = pacman.prev_position[0] + (
+        pacman.position[0] - pacman.prev_position[0]) * frame_tick_count / 10
+    pac_y = pacman.prev_position[1] + (
+        pacman.position[1] - pacman.prev_position[1]) * frame_tick_count / 10
+    cycle = 10 * get_ghost_move_interval(level_index)
+    for ghost in ghosts:
+        gx = ghost.prev_x + (ghost.x - ghost.prev_x) * ghost_tick_count / cycle
+        gy = ghost.prev_y + (ghost.y - ghost.prev_y) * ghost_tick_count / cycle
+        if abs(pac_x - gx) < 0.45 and abs(pac_y - gy) < 0.45:
+            if ghost.state == "escape":
+                ghost.get_eaten()
+                pacman.score += con['points_per_ghost']
+            elif ghost.state == "chasing" and not invincible:
+                if not pacman.respawn():
+                    game_state = "name_input"
+                    display_save_name(player_name, False, pacman.score)
+                    pygame.display.update()
+                    return (buttons, level_index, game_state)
     m.draw_maze(screen, maze, x_cor, y_cor)
     m.draw_pacgums(screen, pacgums, x_cor, y_cor)
     pacman.draw_pacman(screen, frame_tick_count, x_cor, y_cor)
