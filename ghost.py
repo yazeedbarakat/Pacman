@@ -37,7 +37,7 @@ class Ghost:
         """Initialize a ghost with position, difficulty, and maze reference.
 
         Args:
-l            start_x: Starting x-coordinate (also used as respawn position).
+            start_x: Starting x-coordinate (also used as respawn position).
             start_y: Starting y-coordinate (also used as respawn position).
             difficulty: If False, the ghost uses easier settings (shorter
                 view range, longer respawn/edible timers). If True, uses

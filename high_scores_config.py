@@ -1,3 +1,9 @@
+"""Persistent highscore storage for the Pacman game.
+
+Loads, saves, and updates the top-10 highscore list kept as a JSON
+file on disk, tolerating missing or unreadable files.
+"""
+
 import json
 from typing import Any
 

@@ -1,3 +1,10 @@
+"""Screen and HUD drawing for the Pacman game.
+
+Renders the main menu, instructions, high scores, cheat panel, pause
+submenu, end-of-game name entry, and the in-game HUD (score, hearts,
+level, timer) onto the game screen bound via init_display.
+"""
+
 import pygame
 from high_scores_config import load_high_scores
 import os

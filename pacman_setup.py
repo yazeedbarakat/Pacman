@@ -1,3 +1,10 @@
+"""The Pacman player entity.
+
+Defines the Pacman class: grid-based movement against the maze's wall
+bitmasks, lives and score, respawning, and directional sprite
+animation with interpolated drawing.
+"""
+
 import pygame
 
 from constants import CELL_SIZE
@@ -38,6 +45,7 @@ class Pacman:
             grid: The maze's wall bitmask grid.
             width: Maze width in cells.
             height: Maze height in cells.
+            con_lives: Starting number of lives, from the config.
         """
         self.grid = grid
         self.center: tuple[int, int] = (width // 2, height // 2)

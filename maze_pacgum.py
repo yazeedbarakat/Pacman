@@ -1,3 +1,10 @@
+"""Maze loading, pacgum placement, and maze/pacgum drawing.
+
+Wraps the external mazegenerator package, defines the Pacgum and
+SuperPacgum collectibles, and renders the maze grid from its wall
+bitmasks.
+"""
+
 import random
 from typing import Any
 from mazegenerator import MazeGenerator
@@ -126,10 +133,11 @@ def draw_pacgums(
 def draw_maze(
     screen: pygame.Surface, maze: dict[str, Any], maze_x: int, maze_y: int
 ) -> None:
-    """Draw the maze grid, rendering walls per-cell from the wall bitmask.
+    """Draw the maze grid, rendering corridors per-cell from the wall bitmask.
 
-    Each cell's low 4 bits mark open sides (up/right/down/left); a
-    missing bit is drawn as a black wall segment on that side.
+    Each cell's low 4 bits mark walls (up/right/down/left); a cleared
+    bit is an open side, drawn as a black corridor over the dark-blue
+    cell. Cells of 0xF are solid blocks drawn grey.
 
     Args:
         screen: Surface to draw onto.

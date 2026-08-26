@@ -1,3 +1,10 @@
+"""Entry point and main loop for the Pacman game.
+
+Owns the game window, the top-level state machine (menu, playing,
+pause submenu, name entry, instructions, high scores), level
+progression, cheat mode, and all pygame event dispatch.
+"""
+
 import sys
 import ghost_renderer as ghost_renderer_module
 from ghost import Ghost
