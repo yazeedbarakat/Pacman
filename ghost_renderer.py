@@ -33,7 +33,7 @@ class GhostRenderer:
                 scaled to ``cell_size - 8`` pixels. Defaults to 18.
         """
         self.cell_size: int = cell_size
-        self.ghost_size: int = cell_size - 8
+        self.ghost_size: int = cell_size - 16
         self.center_offset: int = (cell_size - self.ghost_size) // 2
         self.ghost_images: Dict[str, pygame.Surface] = {}
         self._load_ghost_images()

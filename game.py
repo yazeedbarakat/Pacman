@@ -60,7 +60,7 @@ def make_ghosts(width: int, height: int, level: int) -> list[Ghost]:
         The 4 newly created Ghost instances.
     """
     corners = [(0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)]
-    return [Ghost(cx, cy, 1, maze['grid'], level) for cx, cy in corners]
+    return [Ghost(cx, cy, True, maze['grid'], level) for cx, cy in corners]
 
 
 def get_ghost_move_interval(level_index: int) -> int:
