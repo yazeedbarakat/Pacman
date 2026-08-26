@@ -82,7 +82,7 @@ def get_ghost_move_interval(level_index: int) -> int:
         Ticks per ghost movement cycle (minimum 1).
     """
     num_levels = len(con['levels'])
-    return max(1, num_levels - level_index)
+    return max(1, (num_levels - level_index) // 2)
 
 
 ghosts = make_ghosts(maze_width, maze_height, level)
