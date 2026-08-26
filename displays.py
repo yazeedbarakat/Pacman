@@ -19,6 +19,7 @@ background = pygame.transform.scale(
 pacman = pygame.image.load('assets/menu/pac-man.png')
 heart = pygame.transform.scale(pygame.image.load('assets/menu/heart.png'), (60, 60))
 game_over = pygame.transform.scale(pygame.image.load('assets/menu/game_over.png'), (700, 500))
+you_win = pygame.transform.scale(pygame.image.load('assets/menu/you_win.png'), (700, 500))
 gif_frames: list[pygame.Surface] = []
 gif_index = 0
 gif_tick = 0
@@ -263,7 +264,7 @@ def display_submenu() -> tuple[pygame.Rect, pygame.Rect]:
     return (continue_button, save_quit_button)
 
 
-def display_save_name(player_name: str) -> None:
+def display_save_name(player_name: str, game_won: bool) -> None:
     """Draw the game-over screen with its animated gif and name-entry field.
 
     Args:
@@ -272,7 +273,10 @@ def display_save_name(player_name: str) -> None:
     """
     global gif_index, gif_tick
     screen.blit(background, (0, 0))
-    screen.blit(game_over, (width/2 - 350, height/2 - 650))
+    if game_won:
+         screen.blit(you_win, (width/2 - 380, height/2 - 650))
+    else:
+        screen.blit(game_over, (width/2 - 350, height/2 - 650))
     frame = pygame.transform.scale(gif_frames[gif_index], (500, 300))
     screen.blit(frame, (width//2 - 250, height//2 + 200))
     gif_tick += 1

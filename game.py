@@ -42,7 +42,7 @@ pygame.display.set_caption('Pacman')
 clock = pygame.time.Clock()
 maze = m.maze_loader((maze_width, maze_height), 42)
 pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'])
-pacman = pacman_setup.Pacman(maze['grid'], maze_width, maze_height)
+pacman = pacman_setup.Pacman(maze['grid'], maze_width, maze_height, con['lives'])
 ghost_renderer = ghost_renderer_module.GhostRenderer(cell_size=CELL_SIZE)
 level = 0
 init_gif()
@@ -93,7 +93,7 @@ def set_game() -> None:
     maze_width, maze_height = get_level_config(level_index=0)
     maze = m.maze_loader((maze_width, maze_height), 42)
     pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'])
-    pacman = pacman_setup.Pacman(maze['grid'], maze_width, maze_height)
+    pacman = pacman_setup.Pacman(maze['grid'], maze_width, maze_height, con['lives'])
     ghosts = make_ghosts(maze_width, maze_height, level)
     level_time = con['level_max_time']
 
@@ -114,7 +114,7 @@ def switch_level(level_index: int) -> None:
     pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'])
     score = pacman.score
     lives = pacman.lives
-    pacman = pacman_setup.Pacman(maze['grid'], maze_width, maze_height)
+    pacman = pacman_setup.Pacman(maze['grid'], maze_width, maze_height, con['lives'])
     pacman.score = score
     pacman.lives = lives
     ghosts = make_ghosts(maze_width, maze_height, level_index + 1)
@@ -124,7 +124,7 @@ def switch_level(level_index: int) -> None:
 def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
                    shadow_mode: bool, invincible: bool, speed_boost: bool,
                    time_paused: bool, buttons: tuple[pygame.Rect, ...],
-                   player_name: str, game_state: str,
+                   player_name: str, game_state: str, pacman: pacman_setup.Pacman,
                    ghost_tick_count: int) -> tuple[tuple[pygame.Rect, ...], int, str]:
     """Advance and draw one frame of active gameplay.
 
@@ -151,10 +151,12 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
     for ghost in ghosts:
         if not (shadow_mode) and ghost_tick_count == 1:
             ghost.update(pacman.position)
-    if frame_tick_count == 1:
-        if speed_boost:
-            pacman.move(2)
-        else:
+    if frame_tick_count in (1, 4, 7):
+
+        pacman.cur_dir = pacman.nxt_dir
+        if speed_boost and frame_tick_count in (4, 7):
+            pacman.move(1)
+        if frame_tick_count == 1:
             pacman.move(1)
         pacman.update_frame()
         dx = pacman.position[0] - pacman.prev_position[0]
@@ -186,14 +188,14 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
                 elif ghost.state == "chasing" and not invincible:
                     if not pacman.respawn():
                         game_state = "name_input"
-                        display_save_name(player_name)
+                        display_save_name(player_name, False)
                         pygame.display.update()
                         return (buttons, level_index, game_state)
         if all(pacgum.eaten for pacgum in pacgums):
             level_index += 1
             if level_index >= len(con['levels']):
                 game_state = 'name_input'
-                display_save_name(player_name)
+                display_save_name(player_name, True)
                 pygame.display.update()
                 return (buttons, level_index, game_state)
             else:
@@ -299,14 +301,14 @@ def handle_playing_buttons(
         level_index += 1
         if level_index >= len(con['levels']):
             game_state = 'name_input'
-            display_save_name(player_name)
+            display_save_name(player_name, True)
             return (buttons, level_index, invincible, shadow_mode,
                     speed_boost, time_paused, game_state, player_name)
         else:
             switch_level(level_index)
             buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
     elif buttons[1].collidepoint(event.pos):
-        if pacman.lives < 3:
+        if pacman.lives < con['lives']:
             pacman.lives += 1
         buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
     elif buttons[2].collidepoint(event.pos):
@@ -384,12 +386,15 @@ def main() -> None:
         if game_state == 'playing':
             buttons, level_index, game_state = handle_playing(
                 frame_tick_count, level_time, level_index, shadow_mode,
-                invincible, speed_boost, time_paused, buttons, player_name, game_state,
-                ghost_tick_count)
+                invincible, speed_boost, time_paused, buttons, player_name,
+                game_state, pacman, ghost_tick_count)
         elif game_state == 'submenu':
             buttons = handle_submenu(player_name, buttons)
         elif game_state == 'name_input':
-            display_save_name(player_name)
+            if level_index <= len(con['levels']):
+                display_save_name(player_name, True)
+            else:
+                display_save_name(player_name, False)
             pygame.display.update()
         if frame_tick_count >= 10:
             frame_tick_count = 0
@@ -402,7 +407,7 @@ def main() -> None:
                 level_time -= 1
                 if level_time <= 0:
                     game_state = "name_input"
-                    display_save_name(player_name)
+                    display_save_name(player_name, False)
                     pygame.display.update()
 
         for event in pygame.event.get():
@@ -442,13 +447,13 @@ def main() -> None:
 
             elif event.type == pygame.KEYDOWN and game_state == 'playing':
                 if event.key == pygame.K_UP:
-                    pacman.cur_dir = 'U'
+                    pacman.nxt_dir = 'U'
                 elif event.key == pygame.K_DOWN:
-                    pacman.cur_dir = 'D'
+                    pacman.nxt_dir = 'D'
                 elif event.key == pygame.K_LEFT:
-                    pacman.cur_dir = 'L'
+                    pacman.nxt_dir = 'L'
                 elif event.key == pygame.K_RIGHT:
-                    pacman.cur_dir = 'R'
+                    pacman.nxt_dir = 'R'
                 elif event.key == pygame.K_ESCAPE:
                     game_state = 'submenu'
                     buttons = display_submenu()
