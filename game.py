@@ -57,16 +57,28 @@ init_gif()
 def make_ghosts(width: int, height: int, level: int) -> list[Ghost]:
     """Create the 4 ghosts, one spawned at each maze corner.
 
+    Only some ghosts hunt the player, via their view_range: one chaser
+    in the first 5 levels, two in the later levels. The rest get a
+    view_range of 0 so they always wander randomly.
+
     Args:
         width: Maze width in cells.
         height: Maze height in cells.
-        level: Current level, used to scale each ghost's difficulty.
+        level: Current level, used to scale each ghost's difficulty
+            and pick how many ghosts chase.
 
     Returns:
         The 4 newly created Ghost instances.
     """
     corners = [(0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)]
-    return [Ghost(cx, cy, True, maze['grid'], level) for cx, cy in corners]
+    num_chasers = 1 if level <= 5 else 2
+    ghosts = []
+    for i, (cx, cy) in enumerate(corners):
+        ghost = Ghost(cx, cy, i < num_chasers, maze['grid'], level)
+        if i >= num_chasers:
+            ghost.view_range = 0
+        ghosts.append(ghost)
+    return ghosts
 
 
 def get_ghost_move_interval(level_index: int) -> int:
