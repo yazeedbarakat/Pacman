@@ -8,7 +8,6 @@ for any missing or invalid values.
 import json
 from typing import Dict, Any
 
-# Default configuration values for the Pacman game.
 DEFAULT_CONFIG: Dict[str, Any] = {
     "highscore_filename": "pc.json",
     "levels": [
@@ -32,8 +31,6 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "level_max_time": 90
 }
 
-# Maze sizes outside these bounds break the generator or overflow the
-# 1920x1080 window, so level dimensions are clamped into them.
 MIN_WIDTH, MAX_WIDTH = 15, 30
 MIN_HEIGHT, MAX_HEIGHT = 11, 24
 

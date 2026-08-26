@@ -137,7 +137,6 @@ def switch_level(level_index: int) -> None:
     global maze_width, maze_height, maze, pacgums, pacman, level_time, x_cor, ghosts
     maze_width, maze_height = get_level_config(level_index)
     x_cor = screen_width // 2 - maze_width * CELL_SIZE // 2
-    # seed 0 = unseeded: every level after the first gets a random maze
     maze = m.maze_loader((maze_width, maze_height), 0)
     pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'],
                               con['points_per_pacgum'],
@@ -180,8 +179,6 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
     """
     for ghost in ghosts:
         if shadow_mode:
-            # frozen: sync prev to current so the interpolated draw
-            # doesn't slide the ghost back and forth every cycle
             ghost.prev_x, ghost.prev_y = ghost.x, ghost.y
         elif ghost_tick_count == 1:
             ghost.update(pacman.position)
@@ -212,7 +209,6 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
                         ghost.make_edible()
         for ghost in ghosts:
             ghost_cell = (ghost.x, ghost.y)
-            # also catch pacman and a ghost swapping cells in the same tick
             swapped = ((ghost.prev_x, ghost.prev_y) == pacman.position
                        and ghost_cell == pacman.prev_position)
             if ghost_cell in traversed or swapped:
@@ -238,7 +234,6 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
     m.draw_maze(screen, maze, x_cor, y_cor)
     m.draw_pacgums(screen, pacgums, x_cor, y_cor)
     pacman.draw_pacman(screen, frame_tick_count, x_cor, y_cor)
-    # subsurface lines up ghost grid coords with the maze's x_cor/y_cor offset
     maze_surface = screen.subsurface(
         (x_cor, y_cor, maze_width * CELL_SIZE, maze_height * CELL_SIZE))
     ghost_renderer.draw_ghosts(maze_surface, ghosts, ghost_tick_count,
@@ -425,7 +420,6 @@ def main() -> None:
         elif game_state == 'submenu':
             buttons = handle_submenu(player_name, buttons)
         elif game_state == 'name_input':
-            # the game is only won once every level has been cleared
             display_save_name(player_name,
                               level_index >= len(con['levels']),
                               pacman.score)
