@@ -1,22 +1,52 @@
+"""Ghost AI module for Pacman.
+
+Defines the Ghost class which implements three behavioral states
+(chasing, escape, respawn) with BFS-based pathfinding, difficulty
+scaling, and maze-aware movement.
+"""
+
 import time
 from typing import Tuple, List, Optional
 import random
 
 
 class Ghost:
-    """A single maze ghost that chases, flees, or respawns based on state."""
+    """A ghost enemy with state-driven AI behavior.
 
-    def __init__(self, start_x: int, start_y: int, difficulty: int,
+    Each ghost operates in one of three states:
+        - **chasing**: Actively pursues the player using BFS pathfinding
+          when within view range, or moves randomly otherwise.
+        - **escape**: Flees from the player after a super pac-gum is eaten,
+          maximizing Manhattan distance each step.
+        - **respawn**: Waits at the spawn point for a cooldown period
+          after being eaten by the player.
+
+    Difficulty and level affect respawn time, edible duration, and
+    view range.
+
+    Attributes:
+        x: Current x-coordinate in the maze.
+        y: Current y-coordinate in the maze.
+        state: Current behavioral state ('chasing', 'escape', or 'respawn').
+        view_range: Maximum Manhattan distance at which the ghost can
+            detect the player.
+    """
+
+    def __init__(self, start_x: int, start_y: int, difficulty: bool,
                  maze: List[List[int]], level: int = 1):
-        """Initialize a ghost at its corner spawn point.
+        """Initialize a ghost with position, difficulty, and maze reference.
 
         Args:
-            start_x: Spawn/respawn column in the maze grid.
-            start_y: Spawn/respawn row in the maze grid.
-            difficulty: Difficulty tier; values >= 5 give shorter
-                respawn/edible windows and a much larger view range.
-            maze: The maze grid, used for wall/collision checks.
-            level: Current level index, used to scale difficulty timers.
+l            start_x: Starting x-coordinate (also used as respawn position).
+            start_y: Starting y-coordinate (also used as respawn position).
+            difficulty: If False, the ghost uses easier settings (shorter
+                view range, longer respawn/edible timers). If True, uses
+                harder settings with effectively infinite view range.
+            maze: 2D list representing the maze, where each cell's value
+                encodes wall bits (N=0x1, E=0x2, S=0x4, W=0x8) and 0xF
+                indicates a solid block.
+            level: Current game level (1-indexed), used to scale ghost
+                parameters.
         """
         self.start_x = start_x
         self.start_y = start_y
@@ -36,26 +66,26 @@ class Ghost:
             (-1, 0): 0x8
         }
 
-        if self.difficulty < 5:
+        if not self.difficulty:
             self.return_life = max(1, 8 - (self.level * 0.5))
             self.weak_ghost = max(1, 10 - (self.level * 0.5))
             self.view_range = 5 + (self.level * 2)
         else:
             self.return_life = max(1, 4 - (self.level * 0.5))
             self.weak_ghost = max(1, 5 - (self.level * 0.5))
-            self.view_range = 30 + (self.level * 2)
+            self.view_range = 10000
 
         self.death_time = 0.0
         self.edible_time = 0.0
 
     def update(self, player_pos: Tuple[int, int]) -> None:
-        """Advance the ghost's state machine by one tick.
+        """Update the ghost's state and position for one game tick.
 
-        Handles the respawn cooldown, chasing the player, and the
-        edible-then-expiring "escape" state after a super-pacgum.
+        Handles state transitions (respawn cooldown expiry, edible timer
+        expiry) and delegates movement to the appropriate behavior method.
 
         Args:
-            player_pos: Current (x, y) grid position of the player.
+            player_pos: The player's current (x, y) position.
         """
         if self.state == "respawn":
             if time.time() - self.death_time >= self.return_life:
@@ -69,7 +99,12 @@ class Ghost:
                 self.escape_player(player_pos)
 
     def get_eaten(self) -> None:
-        """Send the ghost back to its spawn corner and start the respawn timer."""
+        """Handle the ghost being eaten by the player.
+
+        Transitions the ghost to the 'respawn' state, resets its position
+        to the spawn point, and records the death timestamp for cooldown
+        tracking.
+        """
         self.state = "respawn"
         self.x = self.start_x
         self.y = self.start_y
@@ -78,20 +113,25 @@ class Ghost:
         self.death_time = time.time()
 
     def make_edible(self) -> None:
-        """Put the ghost into the fleeing "escape" state after a super-pacgum.
+        """Make the ghost edible (vulnerable) after a super pac-gum is eaten.
 
-        No-op if the ghost is currently respawning, so eating one
-        super-pacgum right after a ghost dies doesn't re-arm it early.
+        Transitions the ghost to the 'escape' state unless it is currently
+        respawning. Records the timestamp to track edible duration.
         """
         if self.state != "respawn":
             self.state = "escape"
             self.edible_time = time.time()
 
     def chase_player(self, player_pos: Tuple[int, int]) -> None:
-        """Move one step toward the player via BFS, or wander if too far.
+        """Move the ghost toward the player using BFS pathfinding.
+
+        If the player is outside the ghost's view range (Manhattan
+        distance), the ghost moves randomly instead. Otherwise, a
+        breadth-first search finds the shortest path through the maze
+        and the ghost advances one step along it.
 
         Args:
-            player_pos: Current (x, y) grid position of the player.
+            player_pos: The player's current (x, y) position.
         """
         self.prev_x, self.prev_y = self.x, self.y
         target_x, target_y = player_pos
@@ -129,10 +169,13 @@ class Ghost:
             self.x, self.y = best_path[0]
 
     def escape_player(self, player_pos: Tuple[int, int]) -> None:
-        """Move one step toward the neighbor farthest from the player.
+        """Move the ghost away from the player.
+
+        Evaluates all valid adjacent moves and selects the one that
+        maximizes Manhattan distance from the player.
 
         Args:
-            player_pos: Current (x, y) grid position of the player.
+            player_pos: The player's current (x, y) position.
         """
         self.prev_x, self.prev_y = self.x, self.y
         target_x, target_y = player_pos
@@ -154,7 +197,12 @@ class Ghost:
             self.x, self.y = best_move
 
     def random_move(self) -> None:
-        """Move one step to a random valid neighbor, avoiding backtracking when possible."""
+        """Move the ghost to a random valid adjacent cell.
+
+        Collects all valid moves and, if more than one option exists,
+        excludes the previous position to avoid immediate backtracking.
+        A random choice is then made from the remaining options.
+        """
         valid_moves = []
 
         for (dx, dy), wall_bit in self.dir_wall_map.items():
@@ -173,19 +221,21 @@ class Ghost:
 
     def is_valid_move(self, curr_x: int, curr_y: int, next_x: int,
                       next_y: int, wall_bit: int) -> bool:
-        """Check whether stepping from (curr_x, curr_y) to (next_x, next_y) is legal.
+        """Check whether a move between two adjacent cells is valid.
+
+        A move is valid if the destination is within maze bounds, there
+        is no wall between the current and next cell (checked via the
+        wall bitmask), and the destination is not a solid block (0xF).
 
         Args:
-            curr_x: Current column.
-            curr_y: Current row.
-            next_x: Candidate column to move into.
-            next_y: Candidate row to move into.
-            wall_bit: Bitmask for the wall on the current cell's side
-                facing the candidate move.
+            curr_x: Current x-coordinate.
+            curr_y: Current y-coordinate.
+            next_x: Destination x-coordinate.
+            next_y: Destination y-coordinate.
+            wall_bit: Bitmask for the wall direction being crossed.
 
         Returns:
-            True if the target cell is in bounds, not solid, and not
-            blocked by a wall on the current cell.
+            True if the move is valid, False otherwise.
         """
         if 0 <= next_y < len(self.maze) and 0 <= next_x < len(self.maze[0]):
             no_wall = not (self.maze[curr_y][curr_x] & wall_bit)
