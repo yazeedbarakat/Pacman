@@ -351,9 +351,9 @@ def display_score(score: int) -> None:
         score: Current score to display.
     """
     pygame.draw.rect(screen, 'black', pygame.Rect(
-        width/2 - 700, height/2 - 500, 320, 50))
+        width/2 - 900, height/2 - 500, 320, 50))
     score_text = level_font.render(f'score: {score}', True, 'white')
-    screen.blit(score_text, (width/2 - 700, height/2 - 500))
+    screen.blit(score_text, (width/2 - 900, height/2 - 500))
 
 
 def display_hearts(lives: int) -> None:
