@@ -17,9 +17,14 @@ Risks below are grounded in things that actually happened during development —
 **Restarting a run after death/win left stale state.** Player lives, score, position, and the maze weren't recreated when returning to the menu and pressing Play again — a player could restart with 0 lives already set from the previous death, ending the new run instantly.
 - *Mitigation applied*: a dedicated `set_game()` reset routine now recreates player/maze/pacgums/ghosts and is called both at startup and whenever the menu is re-entered.
 
+**`setup.cfg` had quietly loosened the flake8 line-length limit to 100.** The assignment requires adherence to "the flake8 coding standard," which by default caps lines at 79 characters. A `setup.cfg` in the repo root raised that to 100, so `make lint` was passing against a relaxed standard rather than flake8's real default — a gap that would only surface if a reviewer ran flake8 without that file, or asked why line length didn't match PEP 8 as the README claimed.
+- *Mitigation applied*: `setup.cfg` removed and all resulting `E501` violations (58 lines across 7 files) fixed against the real 79-character default.
+
 ## Standing risks (not fully mitigated, worth tracking)
 
-**External `mazegenerator` dependency.** Per the assignment, this package is owned by another group, must be used as-is, and gets reinstalled fresh during peer review. If its API changes between now and defense, `maze.py`'s integration breaks with no warning from our side. *Mitigation*: pin the exact version we're developing against if a `requirements.txt`/`Makefile install` step doesn't already do so — worth double-checking before submission.
+**External `mazegenerator` dependency.** Per the assignment, this package is owned by another group, must be used as-is, and gets reinstalled fresh during peer review. If its API changes between now and defense, `maze_pacgum.py`'s integration breaks with no warning from our side. *Mitigation*: pin the exact version we're developing against if a `requirements.txt`/`Makefile install` step doesn't already do so — worth double-checking before submission.
+
+**Levels after the first aren't actually randomized.** `switch_level()` in `game.py` regenerates every non-first-level maze with a hardcoded seed of `0`, so every playthrough produces the identical level 2, level 3, etc. Only level 1's seed is config-driven (`con['seed']`). Not caught yet by manual playtesting because a fixed layout still "works" — it just isn't the randomized-per-level behavior the maze integration implies. Worth deciding whether this is intentional before defense.
 
 **No automated tests.** All verification this project has had is manual playtesting (see [TEST_PLAN.md](TEST_PLAN.md)). Every bug listed above under "realized risks" was found by playing the game, not by a test catching a regression. A change to shared state (the game loop's tick-counter logic in particular) could silently reintroduce any of them.
 

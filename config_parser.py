@@ -6,11 +6,9 @@ for any missing or invalid values.
 """
 
 import json
-import sys
 from typing import Dict, Any
 
-# Default configuration values for the Pacman game.
-DEFAULT_CONFIG = {
+DEFAULT_CONFIG: Dict[str, Any] = {
     "highscore_filename": "pc.json",
     "levels": [
         {"width": 20, "height": 15},
@@ -32,6 +30,10 @@ DEFAULT_CONFIG = {
     "seed": 42,
     "level_max_time": 90
 }
+
+MIN_WIDTH, MAX_WIDTH = 15, 30
+MIN_HEIGHT, MAX_HEIGHT = 11, 24
+
 
 def read_config(filename: str) -> Dict[str, Any]:
     """Read and validate a game configuration file.
@@ -65,39 +67,25 @@ def read_config(filename: str) -> Dict[str, Any]:
             valid_config = dict(DEFAULT_CONFIG)
 
             for key, default_val in DEFAULT_CONFIG.items():
-                
                 if key not in config_data:
-                    print(f"Warning: Missing key '{key}'. Using default: {default_val}")
+                    print(f"Warning: Missing key '{key}'. "
+                          f"Using default: {default_val}")
                     continue
-                
+
                 val = config_data[key]
 
                 if not isinstance(val, type(default_val)):
-                    print(f"Warning: Invalid type for '{key}'. Expected {type(default_val)}. Using default: {default_val}")
+                    print(f"Warning: Invalid type for '{key}'. Expected "
+                          f"{type(default_val)}. Using default: {default_val}")
                     continue
-                
+
                 if type(default_val) in (int, float) and val < 0:
-                    print(f"Warning: Negative value for '{key}'. Using default: {default_val}")
+                    print(f"Warning: Negative value for '{key}'. "
+                          f"Using default: {default_val}")
                     continue
 
                 if key == "levels":
-                    valid_levels = []
-                    i = 0
-                    for level in val:
-                        w = level.get("width", 20)
-                        h = level.get("height", 15)
-
-                        if w < 0: 
-                            print(f"Warning: Negative width in level {i+1}. Using default: 20.")
-                            w = 20
-                        if h < 0: 
-                            print(f"Warning: Negative height in level {i+1}. Using default: 15.")
-                            h = 15
-
-                        valid_levels.append({"width": w, "height": h})
-                        i += 1
-                        
-                    valid_config[key] = valid_levels
+                    valid_config[key] = validate_levels(val)
                     continue
 
                 valid_config[key] = val
@@ -105,11 +93,47 @@ def read_config(filename: str) -> Dict[str, Any]:
             return valid_config
 
     except FileNotFoundError:
-        print(f"Error: Configuration file '{filename}' could not be found. Using default values.")
+        print(f"Error: Configuration file '{filename}' could not be found. "
+              "Using default values.")
         return dict(DEFAULT_CONFIG)
     except json.JSONDecodeError as e:
-        print(f"Error: File '{filename}' contains invalid JSON. Details: {e}. Using default values.")
+        print(f"Error: File '{filename}' contains invalid JSON. "
+              f"Details: {e}. Using default values.")
         return dict(DEFAULT_CONFIG)
     except Exception as e:
-        print(f"An unexpected error occurred while reading file: {e}. Using default values.")
+        print(f"An unexpected error occurred while reading file: {e}. "
+              "Using default values.")
         return dict(DEFAULT_CONFIG)
+
+
+def validate_levels(levels: list) -> list[Dict[str, int]]:
+    """Validate a config 'levels' list, clamping each entry to safe values.
+
+    Non-dict entries and non-integer or out-of-range dimensions are
+    replaced with the 20x15 defaults, with a warning printed for each.
+
+    Args:
+        levels: The raw 'levels' value from the config file.
+
+    Returns:
+        A list of {'width': int, 'height': int} entries safe to play.
+    """
+    valid_levels = []
+    for i, level in enumerate(levels):
+        if not isinstance(level, dict):
+            print(f"Warning: Level {i + 1} is not an object. "
+                  "Using default: 20x15.")
+            valid_levels.append({"width": 20, "height": 15})
+            continue
+        w = level.get("width", 20)
+        h = level.get("height", 15)
+        if not isinstance(w, int) or not MIN_WIDTH <= w <= MAX_WIDTH:
+            print(f"Warning: Invalid width in level {i + 1} "
+                  f"(allowed: {MIN_WIDTH}-{MAX_WIDTH}). Using default: 20.")
+            w = 20
+        if not isinstance(h, int) or not MIN_HEIGHT <= h <= MAX_HEIGHT:
+            print(f"Warning: Invalid height in level {i + 1} "
+                  f"(allowed: {MIN_HEIGHT}-{MAX_HEIGHT}). Using default: 15.")
+            h = 15
+        valid_levels.append({"width": w, "height": h})
+    return valid_levels

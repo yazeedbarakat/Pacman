@@ -1,3 +1,9 @@
+"""Persistent highscore storage for the Pacman game.
+
+Loads, saves, and updates the top-10 highscore list kept as a JSON
+file on disk, tolerating missing or unreadable files.
+"""
+
 import json
 from typing import Any
 
@@ -45,5 +51,6 @@ def add_high_score(file_name: str, name: str, score: int) -> None:
     """
     high_scores = load_high_scores(file_name)
     high_scores.append({'name': name, 'score': score})
-    high_scores = sorted(high_scores, key=lambda entry: entry['score'], reverse=True)[:10]
+    high_scores = sorted(
+        high_scores, key=lambda entry: entry['score'], reverse=True)[:10]
     save_high_scores(file_name, high_scores)

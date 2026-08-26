@@ -98,10 +98,10 @@ class GhostRenderer:
 
         if ghost.state == "escape":
             screen.blit(self.ghost_images['blue'],
-                        (gx * self.cell_size + 4, gy * self.cell_size + 4))
+                        (gx * self.cell_size + 8, gy * self.cell_size + 8))
         elif ghost.state == "chasing":
             screen.blit(self.ghost_images[ghost_name],
-                        (gx * self.cell_size + 4, gy * self.cell_size + 4))
+                        (gx * self.cell_size + 8, gy * self.cell_size + 8))
 
     def draw_ghosts(
         self,

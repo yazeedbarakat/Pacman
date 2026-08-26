@@ -1,3 +1,10 @@
+"""Screen and HUD drawing for the Pacman game.
+
+Renders the main menu, instructions, high scores, cheat panel, pause
+submenu, end-of-game name entry, and the in-game HUD (score, hearts,
+level, timer) onto the game screen bound via init_display.
+"""
+
 import pygame
 from high_scores_config import load_high_scores
 import os
@@ -6,6 +13,7 @@ pygame.init()
 
 pygame.font.init()
 menu_font = pygame.font.Font('assets/fonts/Comfortaa-Regular.otf', 30)
+rules_font = pygame.font.Font('assets/fonts/Comfortaa-Regular.otf', 23)
 name_font = pygame.font.Font('assets/fonts/Comfortaa-Bold.otf', 30)
 level_font = pygame.font.Font('assets/fonts/Montserrat-Bold.otf', 45)
 timer_font = pygame.font.Font('assets/fonts/Montserrat-Bold.otf', 40)
@@ -17,9 +25,12 @@ purple_button = pygame.transform.scale(
 background = pygame.transform.scale(
     pygame.image.load('assets/menu/game_background.png'), (1920, 1080))
 pacman = pygame.image.load('assets/menu/pac-man.png')
-heart = pygame.transform.scale(pygame.image.load('assets/menu/heart.png'), (60, 60))
-game_over = pygame.transform.scale(pygame.image.load('assets/menu/game_over.png'), (700, 500))
-you_win = pygame.transform.scale(pygame.image.load('assets/menu/you_win.png'), (700, 500))
+heart = pygame.transform.scale(
+    pygame.image.load('assets/menu/heart.png'), (60, 60))
+game_over = pygame.transform.scale(
+    pygame.image.load('assets/menu/game_over.png'), (700, 500))
+you_win = pygame.transform.scale(
+    pygame.image.load('assets/menu/you_win.png'), (700, 500))
 gif_frames: list[pygame.Surface] = []
 gif_index = 0
 gif_tick = 0
@@ -39,7 +50,9 @@ def init_gif() -> None:
     gif_index = 0
 
 
-def init_display(game_screen: pygame.Surface, screen_width: int, screen_height: int) -> None:
+def init_display(
+    game_screen: pygame.Surface, screen_width: int, screen_height: int
+) -> None:
     """Bind this module's drawing target and dimensions to the game's screen.
 
     Must be called before any display_* function, since they all draw
@@ -60,7 +73,7 @@ def create_menu_button(
     rect_y_offset: int, icon_y_offset: int,
     text: str, text_x_offset: int, text_y_offset: int
 ) -> pygame.Rect:
-    """Draw one yellow main-menu button with a label and return its clickable rect.
+    """Draw one yellow main-menu button with a label and return its rect.
 
     Args:
         rect_y_offset: Vertical offset of the button rect from screen center.
@@ -76,11 +89,14 @@ def create_menu_button(
     pygame.draw.rect(screen, 'black', button, border_radius=50)
     screen.blit(yellow_button, (width/2 - 213, height/2 + icon_y_offset))
     display_text = menu_font.render(text, True, 'white')
-    screen.blit(display_text, (width/2 + text_x_offset, height/2 + text_y_offset))
+    screen.blit(display_text,
+                (width/2 + text_x_offset, height/2 + text_y_offset))
     return button
 
 
-def display_menu() -> tuple[pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect]:
+def display_menu() -> tuple[
+    pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect
+]:
     """Draw the main menu and return its buttons' clickable rects.
 
     Returns:
@@ -93,7 +109,8 @@ def display_menu() -> tuple[pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect]:
 
     play_button = create_menu_button(10, -66, "PLAY", -40, 20)
 
-    instructions_button = create_menu_button(100, 24, "INSTRUCTIONS", -115, 110)
+    instructions_button = create_menu_button(
+        100, 24, "INSTRUCTIONS", -115, 110)
 
     high_score_button = create_menu_button(190, 114, "HIGH SCORES", -115, 200)
 
@@ -110,18 +127,29 @@ def display_instructions() -> tuple[pygame.Rect]:
         A 1-tuple containing the back-to-menu button's clickable rect.
     """
     screen.blit(background, (0, 0))
-    arrows = pygame.transform.scale(pygame.image.load("assets/menu/arrows.png"),
-                                    (260, 260))
-    screen.blit(menu_font.render("- Eat all pacgums to clear the level", True, 'white'),
-                (width/2 - 400, height/2 - 500))
-    screen.blit(menu_font.render("- 3 lives, any mistake costs a life", True, 'white'),
-                (width/2 - 400, height/2 - 440))
-    screen.blit(menu_font.render("- Scoring values pulled from config", True, 'white'),
-                (width/2 - 400, height/2 - 380))
+    arrows = pygame.transform.scale(
+        pygame.image.load("assets/menu/arrows.png"), (260, 260))
+    rules = [
+        "- Eat all pacgums to clear the level; clear every level to win",
+        "- Touching a chasing ghost costs a life; 0 lives is game over",
+        "- Super-pacgums in the 4 corners make ghosts edible for a while",
+        "- Eat an edible (blue) ghost for bonus points",
+        "- Each level is timed; running out of time ends the game",
+        "- Score, lives, level and time are shown at the top of the screen",
+        "- Press ESC to pause: continue, or save your score and quit",
+        "- When the game ends, enter your name to save your highscore",
+        "- Cheat panel (right side in game) lets reviewers test features",
+        "- Lives, scoring, timer and levels are set in the config file",
+    ]
+    for i, rule in enumerate(rules):
+        screen.blit(rules_font.render(rule, True, 'white'),
+                    (width/2 - 385, height/2 - 480 + i * 46))
 
-    screen.blit(menu_font.render("Use the arrow keys to move", True, 'white'),
-                (width/2 - 200, height/2 - 10))
-    screen.blit(arrows, (width/2 - 130, height/2 - 230))
+    arrows = pygame.transform.scale(arrows, (150, 150))
+    screen.blit(arrows, (width/2 - 330, height/2 + 5))
+    screen.blit(rules_font.render("Move with the arrow keys or W A S D",
+                                  True, 'white'),
+                (width/2 - 150, height/2 + 65))
     back_menu_button = pygame.Rect(width/2 - 160, height/2 + 257, 320, 50)
     pygame.draw.rect(screen, 'black', back_menu_button, border_radius=50)
     screen.blit(yellow_button, (width/2 - 213, height/2 + 180))
@@ -132,7 +160,7 @@ def display_instructions() -> tuple[pygame.Rect]:
 
 
 def display_high_scores(file_name: str) -> tuple[pygame.Rect]:
-    """Draw the top-10 high score table and return its back-to-menu button rect.
+    """Draw the top-10 high score table and return its back-to-menu rect.
 
     Args:
         file_name: Path to the JSON high score file to load and display.
@@ -176,7 +204,7 @@ def create_cheat_mode_button(
     mode: bool | None, rect_y_offset: int, icon_y_offset: int,
     text: str, text_y_offset: int, switch_y_offset: int = 0
 ) -> pygame.Rect:
-    """Draw one purple cheat-mode button, with an on/off dot if `mode` is given.
+    """Draw one purple cheat-mode button, with an on/off dot if given.
 
     Args:
         mode: Current toggle state to show as a green/red dot, or
@@ -198,17 +226,20 @@ def create_cheat_mode_button(
     if mode is not None:
         if mode:
             pygame.draw.rect(screen, 'green', pygame.Rect(
-                width/2 + 840, height/2 + switch_y_offset, 20, 20), border_radius=50)
+                width/2 + 840, height/2 + switch_y_offset, 20, 20),
+                border_radius=50)
         else:
             pygame.draw.rect(screen, 'red', pygame.Rect(
-                width/2 + 840, height/2 + switch_y_offset, 20, 20), border_radius=50)
+                width/2 + 840, height/2 + switch_y_offset, 20, 20),
+                border_radius=50)
     return button
 
 
 def display_cheat_mode(
     invincible: bool, shadow_mode: bool, speed_boost: bool, time_paused: bool
 ) -> tuple[
-    pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect
+    pygame.Rect, pygame.Rect, pygame.Rect,
+    pygame.Rect, pygame.Rect, pygame.Rect
 ]:
     """Draw the cheat-mode panel and return its buttons' clickable rects.
 
@@ -224,18 +255,23 @@ def display_cheat_mode(
     """
     screen.blit(background, (0, 0))
 
-    skip_level_button = create_cheat_mode_button(None, -348, -424, "SKIP LEVEL", -335)
+    skip_level_button = create_cheat_mode_button(
+        None, -348, -424, "SKIP LEVEL", -335)
 
-    extra_lives_button = create_cheat_mode_button(None, -264, -339, "ADD EXTRA LIVE", -250)
+    extra_lives_button = create_cheat_mode_button(
+        None, -264, -339, "ADD EXTRA LIVE", -250)
 
-    shadow_button = create_cheat_mode_button(shadow_mode, -180, -257, "SHADOW MODE", -168, -162)
+    shadow_button = create_cheat_mode_button(
+        shadow_mode, -180, -257, "SHADOW MODE", -168, -162)
 
     invincibility_button = create_cheat_mode_button(
         invincible, -100, -175, "INVINCIBILITY", -85, -80)
 
-    pause_timer_button = create_cheat_mode_button(time_paused, -20, -95, "PAUSE TIMER", -5, -1)
+    pause_timer_button = create_cheat_mode_button(
+        time_paused, -20, -95, "PAUSE TIMER", -5, -1)
 
-    speed_boost_button = create_cheat_mode_button(speed_boost, 64, -12, "SPEED BOOST", 77, 82)
+    speed_boost_button = create_cheat_mode_button(
+        speed_boost, 64, -12, "SPEED BOOST", 77, 82)
 
     return (skip_level_button, extra_lives_button, shadow_button,
             invincibility_button, pause_timer_button, speed_boost_button)
@@ -264,19 +300,24 @@ def display_submenu() -> tuple[pygame.Rect, pygame.Rect]:
     return (continue_button, save_quit_button)
 
 
-def display_save_name(player_name: str, game_won: bool) -> None:
-    """Draw the game-over screen with its animated gif and name-entry field.
+def display_save_name(player_name: str, game_won: bool, score: int) -> None:
+    """Draw the end screen with the final score and name-entry field.
 
     Args:
         player_name: Name typed so far; an empty string shows a
             placeholder prompt instead of the entry box.
+        game_won: True shows the victory banner, False the game-over one.
+        score: Final score to display.
     """
     global gif_index, gif_tick
     screen.blit(background, (0, 0))
     if game_won:
-         screen.blit(you_win, (width/2 - 380, height/2 - 650))
+        screen.blit(you_win, (width/2 - 380, height/2 - 650))
     else:
         screen.blit(game_over, (width/2 - 350, height/2 - 650))
+    score_text = level_font.render(f'final score: {score}', True, 'yellow')
+    screen.blit(score_text, (width/2 - score_text.get_width()/2,
+                             height/2 - 90))
     frame = pygame.transform.scale(gif_frames[gif_index], (500, 300))
     screen.blit(frame, (width//2 - 250, height//2 + 200))
     gif_tick += 1
@@ -323,18 +364,37 @@ def display_timer(time: int) -> None:
     seconds_str = '0' + str(seconds) if seconds // 10 == 0 else str(seconds)
     pygame.draw.rect(screen, 'black', pygame.Rect(
         width/2 - 80, height/2 - 500, 130, 50))
-    time_text = timer_font.render(f"{minutes_str}:{seconds_str}", True, 'white')
+    time_text = timer_font.render(
+        f"{minutes_str}:{seconds_str}", True, 'white')
     screen.blit(time_text, (width/2 - 75, height/2 - 500))
+
+
+def display_score(score: int) -> None:
+    """Redraw the current score in the HUD.
+
+    Args:
+        score: Current score to display.
+    """
+    pygame.draw.rect(screen, 'black', pygame.Rect(
+        width/2 - 900, height/2 - 500, 320, 50))
+    score_text = level_font.render(f'score: {score}', True, 'white')
+    screen.blit(score_text, (width/2 - 900, height/2 - 500))
 
 
 def display_hearts(lives: int) -> None:
     """Redraw the lives HUD as up to 3 heart icons.
 
+    Lives beyond the third heart are shown as a "+N" counter next to
+    the hearts instead of extra icons.
+
     Args:
-        lives: Current number of lives remaining (capped at 3 icons).
+        lives: Current number of lives remaining.
     """
     pygame.draw.rect(screen, 'black', pygame.Rect(
-        width/2 - 350, height/2 - 500, 120, 50))
+        width/2 - 360, height/2 - 500, 200, 50))
     hearts = 3 if lives >= 3 else lives
     for i in range(hearts):
         screen.blit(heart, (width/2 - 360 + i * 40, height/2 - 505))
+    if lives > 3:
+        extra = name_font.render(f'+{lives - 3}', True, 'white')
+        screen.blit(extra, (width/2 - 215, height/2 - 495))

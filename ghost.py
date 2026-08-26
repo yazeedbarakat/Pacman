@@ -37,7 +37,7 @@ class Ghost:
         """Initialize a ghost with position, difficulty, and maze reference.
 
         Args:
-l            start_x: Starting x-coordinate (also used as respawn position).
+            start_x: Starting x-coordinate (also used as respawn position).
             start_y: Starting y-coordinate (also used as respawn position).
             difficulty: If False, the ghost uses easier settings (shorter
                 view range, longer respawn/edible timers). If True, uses
@@ -72,7 +72,7 @@ l            start_x: Starting x-coordinate (also used as respawn position).
             self.view_range = 5 + (self.level * 2)
         else:
             self.return_life = max(1, 4 - (self.level * 0.5))
-            self.weak_ghost = max(1, 5 - (self.level * 0.5))
+            self.weak_ghost = max(5, 10 - (self.level * 0.5))
             self.view_range = 10000
 
         self.death_time = 0.0
@@ -142,7 +142,8 @@ l            start_x: Starting x-coordinate (also used as respawn position).
             self.random_move()
             return
 
-        queue: List[Tuple[int, int, List[Tuple[int, int]]]] = [(self.x, self.y, [])]
+        queue: List[Tuple[int, int, List[Tuple[int, int]]]] = [
+            (self.x, self.y, [])]
         visited = {(self.x, self.y)}
         best_path = []
 
@@ -160,10 +161,12 @@ l            start_x: Starting x-coordinate (also used as respawn position).
                 next_x = curr_x + dx
                 next_y = curr_y + dy
 
-                if self.is_valid_move(curr_x, curr_y, next_x, next_y, wall_bit):
+                if self.is_valid_move(
+                        curr_x, curr_y, next_x, next_y, wall_bit):
                     if (next_x, next_y) not in visited:
                         visited.add((next_x, next_y))
-                        queue.append((next_x, next_y, path + [(next_x, next_y)]))
+                        queue.append(
+                            (next_x, next_y, path + [(next_x, next_y)]))
 
         if best_path:
             self.x, self.y = best_path[0]
