@@ -6,7 +6,7 @@ CONFIG = config.json
 all: run
 
 install:
-	$(PYTHON) -m pip install pygame
+	$(PYTHON) -m pip install pygame flake8 mypy mazegenerator-2.1.0-py3-none-any.whl
 
 run:
 	$(PYTHON) game.py $(CONFIG)

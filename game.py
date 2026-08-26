@@ -1,3 +1,4 @@
+import sys
 import ghost_renderer as ghost_renderer_module
 from ghost import Ghost
 from high_scores_config import add_high_score
@@ -8,9 +9,12 @@ from config_parser import read_config
 from constants import CELL_SIZE
 from displays import display_menu, display_instructions, display_cheat_mode, \
     display_submenu, display_high_scores, display_save_name, init_gif, \
-    init_display, display_hearts, display_level, display_timer
+    init_display, display_hearts, display_level, display_timer, display_score
 
-con = read_config('config.json')
+if len(sys.argv) != 2:
+    print('Usage: python3 game.py <config_file.json>')
+    sys.exit(1)
+con = read_config(sys.argv[1])
 pygame.font.init()
 
 
@@ -40,8 +44,10 @@ pygame.init()
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('Pacman')
 clock = pygame.time.Clock()
-maze = m.maze_loader((maze_width, maze_height), 42)
-pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'])
+maze = m.maze_loader((maze_width, maze_height), con['seed'])
+pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'],
+                          con['points_per_pacgum'],
+                          con['points_per_super_pacgum'], con['pacgum'])
 pacman = pacman_setup.Pacman(maze['grid'], maze_width, maze_height, con['lives'])
 ghost_renderer = ghost_renderer_module.GhostRenderer(cell_size=CELL_SIZE)
 level = 0
@@ -91,8 +97,10 @@ def set_game() -> None:
     """
     global maze_width, maze_height, maze, pacgums, pacman, level_time, ghosts
     maze_width, maze_height = get_level_config(level_index=0)
-    maze = m.maze_loader((maze_width, maze_height), 42)
-    pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'])
+    maze = m.maze_loader((maze_width, maze_height), con['seed'])
+    pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'],
+                              con['points_per_pacgum'],
+                              con['points_per_super_pacgum'], con['pacgum'])
     pacman = pacman_setup.Pacman(maze['grid'], maze_width, maze_height, con['lives'])
     ghosts = make_ghosts(maze_width, maze_height, level)
     level_time = con['level_max_time']
@@ -110,8 +118,11 @@ def switch_level(level_index: int) -> None:
     global maze_width, maze_height, maze, pacgums, pacman, level_time, x_cor, ghosts
     maze_width, maze_height = get_level_config(level_index)
     x_cor = screen_width // 2 - maze_width * CELL_SIZE // 2
-    maze = m.maze_loader((maze_width, maze_height), 42)
-    pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'])
+    # seed 0 = unseeded: every level after the first gets a random maze
+    maze = m.maze_loader((maze_width, maze_height), 0)
+    pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'],
+                              con['points_per_pacgum'],
+                              con['points_per_super_pacgum'], con['pacgum'])
     score = pacman.score
     lives = pacman.lives
     pacman = pacman_setup.Pacman(maze['grid'], maze_width, maze_height, con['lives'])
@@ -176,26 +187,26 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
                 if isinstance(pacgum, m.SuperPacgum):
                     for ghost in ghosts:
                         ghost.make_edible()
-        ghost_cycle_length = 10 * get_ghost_move_interval(level_index)
         for ghost in ghosts:
-            fraction = ghost_tick_count / ghost_cycle_length
-            ghost_pos = (round(ghost.prev_x + (ghost.x - ghost.prev_x) * fraction),
-                         round(ghost.prev_y + (ghost.y - ghost.prev_y) * fraction))
-            if ghost_pos in traversed:
+            ghost_cell = (ghost.x, ghost.y)
+            # also catch pacman and a ghost swapping cells in the same tick
+            swapped = ((ghost.prev_x, ghost.prev_y) == pacman.position
+                       and ghost_cell == pacman.prev_position)
+            if ghost_cell in traversed or swapped:
                 if ghost.state == "escape":
                     ghost.get_eaten()
                     pacman.score += con['points_per_ghost']
                 elif ghost.state == "chasing" and not invincible:
                     if not pacman.respawn():
                         game_state = "name_input"
-                        display_save_name(player_name, False)
+                        display_save_name(player_name, False, pacman.score)
                         pygame.display.update()
                         return (buttons, level_index, game_state)
         if all(pacgum.eaten for pacgum in pacgums):
             level_index += 1
             if level_index >= len(con['levels']):
                 game_state = 'name_input'
-                display_save_name(player_name, True)
+                display_save_name(player_name, True, pacman.score)
                 pygame.display.update()
                 return (buttons, level_index, game_state)
             else:
@@ -212,6 +223,7 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
     display_timer(level_time)
     display_hearts(pacman.lives)
     display_level(level_index + 1)
+    display_score(pacman.score)
     pygame.display.update()
     return (buttons, level_index, game_state)
 
@@ -301,7 +313,7 @@ def handle_playing_buttons(
         level_index += 1
         if level_index >= len(con['levels']):
             game_state = 'name_input'
-            display_save_name(player_name, True)
+            display_save_name(player_name, True, pacman.score)
             return (buttons, level_index, invincible, shadow_mode,
                     speed_boost, time_paused, game_state, player_name)
         else:
@@ -353,7 +365,7 @@ def handle_submenu_buttons(
         buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
     elif buttons[1].collidepoint(event.pos):
         game_state = 'name_input'
-        display_save_name(player_name)
+        display_save_name(player_name, False, pacman.score)
     return (buttons, game_state)
 
 
@@ -391,10 +403,10 @@ def main() -> None:
         elif game_state == 'submenu':
             buttons = handle_submenu(player_name, buttons)
         elif game_state == 'name_input':
-            if level_index <= len(con['levels']):
-                display_save_name(player_name, True)
-            else:
-                display_save_name(player_name, False)
+            # the game is only won once every level has been cleared
+            display_save_name(player_name,
+                              level_index >= len(con['levels']),
+                              pacman.score)
             pygame.display.update()
         if frame_tick_count >= 10:
             frame_tick_count = 0
@@ -407,7 +419,7 @@ def main() -> None:
                 level_time -= 1
                 if level_time <= 0:
                     game_state = "name_input"
-                    display_save_name(player_name, False)
+                    display_save_name(player_name, False, pacman.score)
                     pygame.display.update()
 
         for event in pygame.event.get():
@@ -446,13 +458,13 @@ def main() -> None:
                         buttons = display_menu()
 
             elif event.type == pygame.KEYDOWN and game_state == 'playing':
-                if event.key == pygame.K_UP:
+                if event.key in (pygame.K_UP, pygame.K_w):
                     pacman.nxt_dir = 'U'
-                elif event.key == pygame.K_DOWN:
+                elif event.key in (pygame.K_DOWN, pygame.K_s):
                     pacman.nxt_dir = 'D'
-                elif event.key == pygame.K_LEFT:
+                elif event.key in (pygame.K_LEFT, pygame.K_a):
                     pacman.nxt_dir = 'L'
-                elif event.key == pygame.K_RIGHT:
+                elif event.key in (pygame.K_RIGHT, pygame.K_d):
                     pacman.nxt_dir = 'R'
                 elif event.key == pygame.K_ESCAPE:
                     game_state = 'submenu'

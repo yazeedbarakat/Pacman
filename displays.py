@@ -264,19 +264,24 @@ def display_submenu() -> tuple[pygame.Rect, pygame.Rect]:
     return (continue_button, save_quit_button)
 
 
-def display_save_name(player_name: str, game_won: bool) -> None:
-    """Draw the game-over screen with its animated gif and name-entry field.
+def display_save_name(player_name: str, game_won: bool, score: int) -> None:
+    """Draw the end screen with the final score and name-entry field.
 
     Args:
         player_name: Name typed so far; an empty string shows a
             placeholder prompt instead of the entry box.
+        game_won: True shows the victory banner, False the game-over one.
+        score: Final score to display.
     """
     global gif_index, gif_tick
     screen.blit(background, (0, 0))
     if game_won:
-         screen.blit(you_win, (width/2 - 380, height/2 - 650))
+        screen.blit(you_win, (width/2 - 380, height/2 - 650))
     else:
         screen.blit(game_over, (width/2 - 350, height/2 - 650))
+    score_text = level_font.render(f'final score: {score}', True, 'yellow')
+    screen.blit(score_text, (width/2 - score_text.get_width()/2,
+                             height/2 - 90))
     frame = pygame.transform.scale(gif_frames[gif_index], (500, 300))
     screen.blit(frame, (width//2 - 250, height//2 + 200))
     gif_tick += 1
@@ -325,6 +330,18 @@ def display_timer(time: int) -> None:
         width/2 - 80, height/2 - 500, 130, 50))
     time_text = timer_font.render(f"{minutes_str}:{seconds_str}", True, 'white')
     screen.blit(time_text, (width/2 - 75, height/2 - 500))
+
+
+def display_score(score: int) -> None:
+    """Redraw the current score in the HUD.
+
+    Args:
+        score: Current score to display.
+    """
+    pygame.draw.rect(screen, 'black', pygame.Rect(
+        width/2 - 700, height/2 - 500, 320, 50))
+    score_text = level_font.render(f'score: {score}', True, 'white')
+    screen.blit(score_text, (width/2 - 700, height/2 - 500))
 
 
 def display_hearts(lives: int) -> None:

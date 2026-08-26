@@ -57,7 +57,7 @@ Game parameters are configured via a standard JSON file (e.g., `config.json`) wh
 ### Config Schema & Defaults
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `highscore_filename` | `str` | `"highscore.json"` | Path to persistent highscore JSON file |
+| `highscore_filename` | `str` | `"pc.json"` | Path to persistent highscore JSON file |
 | `lives` | `int` | `3` | Initial number of Pac-Man lives |
 | `pacgum` | `int` | `42` | Number of pacgums placed in maze |
 | `points_per_pacgum` | `int` | `10` | Score awarded for eating a small Pacgum |

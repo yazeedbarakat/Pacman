@@ -1,5 +1,6 @@
+import random
 from typing import Any
-from mazegenerator import MazeGenerator  # type: ignore[import-untyped]
+from mazegenerator import MazeGenerator
 import pygame
 
 from constants import CELL_SIZE
@@ -29,15 +30,16 @@ def maze_loader(maze_size: tuple[int, int], maze_seed: int) -> dict[str, Any]:
 class Pacgum:
     """A single collectible pellet worth points when eaten."""
 
-    def __init__(self, position: tuple[int, int]) -> None:
+    def __init__(self, position: tuple[int, int], points: int = 10) -> None:
         """Place a pacgum at the given grid position.
 
         Args:
             position: (x, y) grid cell the pacgum occupies.
+            points: Score awarded when this pacgum is eaten.
         """
         self.position: tuple[int, int] = position
         self.eaten: bool = False
-        self.points = 10
+        self.points = points
 
     def eat(self) -> int:
         """Mark the pacgum as eaten and return the points it's worth.
@@ -52,37 +54,49 @@ class Pacgum:
 class SuperPacgum(Pacgum):
     """A pacgum worth more points that also makes ghosts edible."""
 
-    def __init__(self, position: tuple[int, int]) -> None:
+    def __init__(self, position: tuple[int, int], points: int = 50) -> None:
         """Place a super-pacgum at the given grid position.
 
         Args:
             position: (x, y) grid cell the super-pacgum occupies.
+            points: Score awarded when this super-pacgum is eaten.
         """
-        super().__init__(position)
-        self.points = 50
+        super().__init__(position, points)
 
 
-def place_pacgums(maze_size: tuple[int, int], maze_grid: list[list[int]]) -> list[Pacgum]:
-    """Fill every non-wall cell with a pacgum, and each corner with a super-pacgum.
+def place_pacgums(maze_size: tuple[int, int], maze_grid: list[list[int]],
+                  points: int = 10, super_points: int = 50,
+                  max_pacgums: int = -1) -> list[Pacgum]:
+    """Fill the corridors with pacgums, and each corner with a super-pacgum.
 
     Args:
         maze_size: (width, height) of the maze in cells.
         maze_grid: The maze's wall bitmask grid.
+        points: Score each pacgum is worth (config points_per_pacgum).
+        super_points: Score each super-pacgum is worth
+            (config points_per_super_pacgum).
+        max_pacgums: Cap on regular pacgums placed (config pacgum);
+            corridors to fill are randomly sampled when there are more
+            than this. Negative means no cap.
 
     Returns:
         The list of placed Pacgum and SuperPacgum instances.
     """
-    pacgums: list[Pacgum | SuperPacgum] = []
     corners: list[tuple[int, int]] = [
         (0, 0), (maze_size[0] - 1, 0), (0, maze_size[1] - 1),
         (maze_size[0] - 1, maze_size[1] - 1)
     ]
+    cells: list[tuple[int, int]] = []
     for row in range(maze_size[1]):
         for col in range(maze_size[0]):
-            if maze_grid[row][col] != 0xF and not (col, row) in corners:
-                pacgums.append(Pacgum((col, row)))
+            if maze_grid[row][col] != 0xF and (col, row) not in corners:
+                cells.append((col, row))
+    if 0 <= max_pacgums < len(cells):
+        cells = random.sample(cells, max_pacgums)
+    pacgums: list[Pacgum | SuperPacgum] = [
+        Pacgum(cell, points) for cell in cells]
     for cor in corners:
-        pacgums.append(SuperPacgum(cor))
+        pacgums.append(SuperPacgum(cor, super_points))
     return pacgums
 
 
