@@ -1,11 +1,29 @@
+"""Configuration parser for Pacman game settings.
+
+Reads and validates game configuration from a JSON file, supporting
+comment lines (prefixed with '#') and falling back to sensible defaults
+for any missing or invalid values.
+"""
+
 import json
 import sys
 from typing import Dict, Any
 
-
+# Default configuration values for the Pacman game.
 DEFAULT_CONFIG = {
-    "highscore_filename": "highscore.json",
-    "levels": [],
+    "highscore_filename": "pc.json",
+    "levels": [
+        {"width": 20, "height": 15},
+        {"width": 20, "height": 15},
+        {"width": 20, "height": 15},
+        {"width": 20, "height": 15},
+        {"width": 20, "height": 15},
+        {"width": 20, "height": 15},
+        {"width": 20, "height": 15},
+        {"width": 20, "height": 15},
+        {"width": 20, "height": 15},
+        {"width": 20, "height": 15}
+    ],
     "lives": 3,
     "pacgum": 42,
     "points_per_pacgum": 10,
@@ -15,19 +33,23 @@ DEFAULT_CONFIG = {
     "level_max_time": 90
 }
 
-
 def read_config(filename: str) -> Dict[str, Any]:
-    """Load and validate the game config from a JSON file with '#' comments.
+    """Read and validate a game configuration file.
 
-    Missing or mistyped keys fall back to DEFAULT_CONFIG, each with a
-    printed warning, so a bad config file degrades instead of crashing.
+    Loads a JSON configuration file, strips comment lines (lines starting
+    with '#'), and validates each key against DEFAULT_CONFIG. Missing keys,
+    invalid types, and negative numeric values are replaced with their
+    corresponding defaults, with warnings printed to stdout.
+
+    For the 'levels' key, each level's width and height are individually
+    validated and clamped to defaults if negative.
 
     Args:
-        filename: Path to the JSON config file to read.
+        filename: Path to the JSON configuration file.
 
     Returns:
-        A config dict containing every key from DEFAULT_CONFIG, using
-        values from the file where present and valid.
+        A dictionary of validated configuration values. If the file cannot
+        be read or parsed, a copy of DEFAULT_CONFIG is returned.
     """
     try:
         with open(filename, 'r') as file:
@@ -43,34 +65,51 @@ def read_config(filename: str) -> Dict[str, Any]:
             valid_config = dict(DEFAULT_CONFIG)
 
             for key, default_val in DEFAULT_CONFIG.items():
-                if key in config_data:
-                    if isinstance(config_data[key], type(default_val)):
-                        valid_config[key] = config_data[key]
-                    else:
-                        exp_type = type(default_val).__name__
-                        msg = (
-                            f"Warning: Invalid type for '{key}'. "
-                            f"Expected {exp_type}. Using default: "
-                            f"{default_val}"
-                        )
-                        print(msg)
-                else:
-                    msg = (
-                        f"Warning: Missing key '{key}'. "
-                        f"Using default: {default_val}"
-                    )
-                    print(msg)
+                
+                if key not in config_data:
+                    print(f"Warning: Missing key '{key}'. Using default: {default_val}")
+                    continue
+                
+                val = config_data[key]
+
+                if not isinstance(val, type(default_val)):
+                    print(f"Warning: Invalid type for '{key}'. Expected {type(default_val)}. Using default: {default_val}")
+                    continue
+                
+                if type(default_val) in (int, float) and val < 0:
+                    print(f"Warning: Negative value for '{key}'. Using default: {default_val}")
+                    continue
+
+                if key == "levels":
+                    valid_levels = []
+                    i = 0
+                    for level in val:
+                        w = level.get("width", 20)
+                        h = level.get("height", 15)
+
+                        if w < 0: 
+                            print(f"Warning: Negative width in level {i+1}. Using default: 20.")
+                            w = 20
+                        if h < 0: 
+                            print(f"Warning: Negative height in level {i+1}. Using default: 15.")
+                            h = 15
+
+                        valid_levels.append({"width": w, "height": h})
+                        i += 1
+                        
+                    valid_config[key] = valid_levels
+                    continue
+
+                valid_config[key] = val
 
             return valid_config
 
     except FileNotFoundError:
-        print(f"Error: Configuration file '{filename}' could not be found.")
-        sys.exit(0)
+        print(f"Error: Configuration file '{filename}' could not be found. Using default values.")
+        return dict(DEFAULT_CONFIG)
     except json.JSONDecodeError as e:
-        print(
-            f"Error: File '{filename}' contains invalid JSON. Details: {e}"
-        )
-        sys.exit(0)
+        print(f"Error: File '{filename}' contains invalid JSON. Details: {e}. Using default values.")
+        return dict(DEFAULT_CONFIG)
     except Exception as e:
-        print(f"An unexpected error occurred while reading file: {e}")
-        sys.exit(0)
+        print(f"An unexpected error occurred while reading file: {e}. Using default values.")
+        return dict(DEFAULT_CONFIG)
