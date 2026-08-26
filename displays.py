@@ -6,6 +6,7 @@ pygame.init()
 
 pygame.font.init()
 menu_font = pygame.font.Font('assets/fonts/Comfortaa-Regular.otf', 30)
+rules_font = pygame.font.Font('assets/fonts/Comfortaa-Regular.otf', 23)
 name_font = pygame.font.Font('assets/fonts/Comfortaa-Bold.otf', 30)
 level_font = pygame.font.Font('assets/fonts/Montserrat-Bold.otf', 45)
 timer_font = pygame.font.Font('assets/fonts/Montserrat-Bold.otf', 40)
@@ -125,14 +126,14 @@ def display_instructions() -> tuple[pygame.Rect]:
         "- Lives, scoring, timer and levels are set in the config file",
     ]
     for i, rule in enumerate(rules):
-        screen.blit(menu_font.render(rule, True, 'white'),
-                    (width/2 - 830, height/2 - 480 + i * 55))
+        screen.blit(rules_font.render(rule, True, 'white'),
+                    (width/2 - 385, height/2 - 480 + i * 46))
 
-    screen.blit(menu_font.render("Move with the arrow keys", True, 'white'),
-                (width/2 + 310, height/2 - 60))
-    screen.blit(menu_font.render("or W A S D", True, 'white'),
-                (width/2 + 400, height/2 - 10))
-    screen.blit(arrows, (width/2 + 320, height/2 - 340))
+    arrows = pygame.transform.scale(arrows, (150, 150))
+    screen.blit(arrows, (width/2 - 330, height/2 + 5))
+    screen.blit(rules_font.render("Move with the arrow keys or W A S D",
+                                  True, 'white'),
+                (width/2 - 150, height/2 + 65))
     back_menu_button = pygame.Rect(width/2 - 160, height/2 + 257, 320, 50)
     pygame.draw.rect(screen, 'black', back_menu_button, border_radius=50)
     screen.blit(yellow_button, (width/2 - 213, height/2 + 180))
