@@ -196,37 +196,28 @@ def handle_playing(frame_tick_count: int, level_time: int, level_index: int,
         if frame_tick_count == 1:
             pacman.move(1)
         pacman.update_frame()
-        dx = pacman.position[0] - pacman.prev_position[0]
-        dy = pacman.position[1] - pacman.prev_position[1]
-        distance = max(abs(dx), abs(dy))
-        traversed = [pacman.position]
-        if distance > 0:
-            step_x = dx // distance
-            step_y = dy // distance
-            traversed = [(pacman.prev_position[0] + step_x * i,
-                          pacman.prev_position[1] + step_y * i)
-                         for i in range(1, distance + 1)]
-        for pacgum in pacgums:
-            if not pacgum.eaten and pacgum.position in traversed:
-                pacgum.eaten = True
-                pacman.score += pacgum.eat()
-                if isinstance(pacgum, m.SuperPacgum):
-                    for ghost in ghosts:
-                        ghost.make_edible()
-        if all(pacgum.eaten for pacgum in pacgums):
-            level_index += 1
-            if level_index >= len(con['levels']):
-                game_state = 'name_input'
-                display_save_name(player_name, True, pacman.score)
-                pygame.display.update()
-                return (buttons, level_index, game_state)
-            else:
-                switch_level(level_index)
-                buttons = display_cheat_mode(invincible, shadow_mode, speed_boost, time_paused)
     pac_x = pacman.prev_position[0] + (
         pacman.position[0] - pacman.prev_position[0]) * frame_tick_count / 10
     pac_y = pacman.prev_position[1] + (
         pacman.position[1] - pacman.prev_position[1]) * frame_tick_count / 10
+    for pacgum in pacgums:
+        if not pacgum.eaten and abs(pac_x - pacgum.position[0]) < 0.3 \
+                and abs(pac_y - pacgum.position[1]) < 0.3:
+            pacman.score += pacgum.eat()
+            if isinstance(pacgum, m.SuperPacgum):
+                for ghost in ghosts:
+                    ghost.make_edible()
+    if all(pacgum.eaten for pacgum in pacgums):
+        level_index += 1
+        if level_index >= len(con['levels']):
+            game_state = 'name_input'
+            display_save_name(player_name, True, pacman.score)
+            pygame.display.update()
+            return (buttons, level_index, game_state)
+        else:
+            switch_level(level_index)
+            buttons = display_cheat_mode(invincible, shadow_mode,
+                                         speed_boost, time_paused)
     cycle = 10 * get_ghost_move_interval(level_index)
     for ghost in ghosts:
         gx = ghost.prev_x + (ghost.x - ghost.prev_x) * ghost_tick_count / cycle
