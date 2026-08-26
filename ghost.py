@@ -72,7 +72,7 @@ class Ghost:
             self.view_range = 5 + (self.level * 2)
         else:
             self.return_life = max(1, 4 - (self.level * 0.5))
-            self.weak_ghost = max(1, 5 - (self.level * 0.5))
+            self.weak_ghost = max(5, 10 - (self.level * 0.5))
             self.view_range = 10000
 
         self.death_time = 0.0
