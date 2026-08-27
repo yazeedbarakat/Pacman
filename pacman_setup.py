@@ -121,7 +121,7 @@ class Pacman:
 
     def draw_pacman(
         self, screen: pygame.Surface, frame_tick_count: int,
-        maze_x: int, maze_y: int
+        maze_x: int, maze_y: int, speed_boost: bool, fraction: int
     ) -> None:
         """Draw Pacman, interpolated between its previous and current cell.
 
@@ -133,8 +133,8 @@ class Pacman:
             maze_y: Pixel y-offset of the maze's top-left corner.
         """
         draw_x = self.prev_position[0] + (
-            self.position[0] - self.prev_position[0]) * frame_tick_count / 10
+            self.position[0] - self.prev_position[0]) * frame_tick_count / fraction
         draw_y = self.prev_position[1] + (
-            self.position[1] - self.prev_position[1]) * frame_tick_count / 10
+            self.position[1] - self.prev_position[1]) * frame_tick_count / fraction
         screen.blit(self.get_frame(), (
             draw_x * CELL_SIZE + 8 + maze_x, draw_y * CELL_SIZE + 8 + maze_y))
