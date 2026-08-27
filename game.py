@@ -50,7 +50,7 @@ maze_width, maze_height = get_level_config(0)
 level_time = con['level_max_time']
 screen_width, screen_height = 1920, 1080
 x_cor = screen_width // 2 - maze_width * CELL_SIZE // 2
-y_cor = screen_height // 2 - 200
+y_cor = screen_height // 2 - 300
 FPS = 60
 
 pygame.init()
