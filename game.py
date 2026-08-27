@@ -150,7 +150,7 @@ def handle_playing(
     shadow_mode: bool, invincible: bool, speed_boost: bool,
     time_paused: bool, buttons: tuple[pygame.Rect, ...],
     player_name: str, game_state: str, pacman: pacman_setup.Pacman,
-    ghost_tick_count: int
+    ghost_tick_count: int, fraction: int
 ) -> tuple[tuple[pygame.Rect, ...], int, str]:
     """Advance and draw one frame of active gameplay.
 
@@ -179,21 +179,17 @@ def handle_playing(
             ghost.prev_x, ghost.prev_y = ghost.x, ghost.y
         elif ghost_tick_count == 1:
             ghost.update(pacman.position)
-    if frame_tick_count in (1, 4, 7):
-
+    if frame_tick_count  == 1:
         pacman.cur_dir = pacman.nxt_dir
-        if speed_boost and frame_tick_count in (4, 7):
-            pacman.move(1)
-        if frame_tick_count == 1:
-            pacman.move(1)
+        pacman.move(1)
         pacman.update_frame()
     pac_x = pacman.prev_position[0] + (
-        pacman.position[0] - pacman.prev_position[0]) * frame_tick_count / 10
+        pacman.position[0] - pacman.prev_position[0]) * frame_tick_count / fraction
     pac_y = pacman.prev_position[1] + (
-        pacman.position[1] - pacman.prev_position[1]) * frame_tick_count / 10
+        pacman.position[1] - pacman.prev_position[1]) * frame_tick_count / fraction
     for pacgum in pacgums:
-        if not pacgum.eaten and abs(pac_x - pacgum.position[0]) < 0.3 \
-                and abs(pac_y - pacgum.position[1]) < 0.3:
+        if not pacgum.eaten and (pac_x - pacgum.position[0] == 0) \
+                and (pac_y - pacgum.position[1] == 0):
             pacman.score += pacgum.eat()
             if isinstance(pacgum, m.SuperPacgum):
                 for ghost in ghosts:
@@ -213,7 +209,7 @@ def handle_playing(
     for ghost in ghosts:
         gx = ghost.prev_x + (ghost.x - ghost.prev_x) * ghost_tick_count / cycle
         gy = ghost.prev_y + (ghost.y - ghost.prev_y) * ghost_tick_count / cycle
-        if abs(pac_x - gx) < 0.45 and abs(pac_y - gy) < 0.45:
+        if abs(pac_x - gx) < .3  and abs(pac_y - gy) < .3:
             if ghost.state == "escape":
                 ghost.get_eaten()
                 pacman.score += con['points_per_ghost']
@@ -225,7 +221,8 @@ def handle_playing(
                     return (buttons, level_index, game_state)
     m.draw_maze(screen, maze, x_cor, y_cor)
     m.draw_pacgums(screen, pacgums, x_cor, y_cor)
-    pacman.draw_pacman(screen, frame_tick_count, x_cor, y_cor)
+    pacman.draw_pacman(screen, frame_tick_count, x_cor, y_cor, speed_boost,
+        fraction)
     maze_surface = screen.subsurface(
         (x_cor, y_cor, maze_width * CELL_SIZE, maze_height * CELL_SIZE))
     ghost_renderer.draw_ghosts(maze_surface, ghosts, ghost_tick_count, 30)
@@ -256,6 +253,20 @@ def handle_submenu(
     return buttons
 
 
+def button_collision(click_pos: tuple[int, int], butten :pygame.Rect) -> bool:
+    start_x = butten.left
+    end_x = butten.right
+    start_y = butten.top
+    end_y = butten.bottom
+    x_in_bound = False
+    y_in_bound = False
+    if click_pos[0] in range(start_x, end_x + 1):
+        x_in_bound = True
+    if click_pos[1] in range(start_y, end_y + 1):
+        y_in_bound = True
+    return x_in_bound and y_in_bound
+
+
 def handle_menu_buttons(
     buttons: tuple[pygame.Rect, ...], event: pygame.event.Event,
     game_state: str, invincible:  bool, shadow_mode: bool, speed_boost: bool,
@@ -277,17 +288,17 @@ def handle_menu_buttons(
         (buttons, game_state), updated for whichever screen was
         entered by the click.
     """
-    if buttons[0].collidepoint(event.pos):
+    if button_collision(event.pos, buttons[0]):
         game_state = 'playing'
         buttons = display_cheat_mode(
             invincible, shadow_mode, speed_boost, time_paused)
-    elif buttons[1].collidepoint(event.pos):
+    elif button_collision(event.pos, buttons[1]):
         game_state = 'instructions'
         buttons = display_instructions()
-    elif buttons[2].collidepoint(event.pos):
+    elif button_collision(event.pos, buttons[2]):
         game_state = 'high_score'
         buttons = display_high_scores(con['highscore_filename'])
-    elif buttons[3].collidepoint(event.pos):
+    elif button_collision(event.pos, buttons[3]):
         pygame.quit()
         exit()
     return (buttons, game_state)
@@ -319,7 +330,7 @@ def handle_playing_buttons(
         (buttons, level_index, invincible, shadow_mode, speed_boost,
         time_paused, game_state, player_name), updated per the cheat toggled.
     """
-    if buttons[0].collidepoint(event.pos):
+    if button_collision(event.pos, buttons[0]):
         level_index += 1
         if level_index >= len(con['levels']):
             game_state = 'name_input'
@@ -330,23 +341,23 @@ def handle_playing_buttons(
             switch_level(level_index)
             buttons = display_cheat_mode(
                 invincible, shadow_mode, speed_boost, time_paused)
-    elif buttons[1].collidepoint(event.pos):
+    elif button_collision(event.pos, buttons[1]):
         pacman.lives += 1
         buttons = display_cheat_mode(
             invincible, shadow_mode, speed_boost, time_paused)
-    elif buttons[2].collidepoint(event.pos):
+    elif button_collision(event.pos, buttons[2]):
         shadow_mode = not (shadow_mode)
         buttons = display_cheat_mode(
             invincible, shadow_mode, speed_boost, time_paused)
-    elif buttons[3].collidepoint(event.pos):
+    elif button_collision(event.pos, buttons[3]):
         invincible = not (invincible)
         buttons = display_cheat_mode(
             invincible, shadow_mode, speed_boost, time_paused)
-    elif buttons[4].collidepoint(event.pos):
+    elif button_collision(event.pos, buttons[4]):
         time_paused = not (time_paused)
         buttons = display_cheat_mode(
             invincible, shadow_mode, speed_boost, time_paused)
-    elif buttons[5].collidepoint(event.pos):
+    elif button_collision(event.pos, buttons[5]):
         speed_boost = not (speed_boost)
         buttons = display_cheat_mode(
             invincible, shadow_mode, speed_boost, time_paused)
@@ -376,14 +387,15 @@ def handle_submenu_buttons(
     Returns:
         (buttons, game_state), updated for whichever option was clicked.
     """
-    if buttons[0].collidepoint(event.pos):
+    if button_collision(event.pos, buttons[0]):
         game_state = 'playing'
         buttons = display_cheat_mode(
             invincible, shadow_mode, speed_boost, time_paused)
-    elif buttons[1].collidepoint(event.pos):
+    elif button_collision(event.pos, buttons[1]):
         game_state = 'name_input'
         display_save_name(player_name, False, pacman.score)
     return (buttons, game_state)
+
 
 
 def main() -> None:
@@ -397,6 +409,7 @@ def main() -> None:
     frame_tick_count = 0
     timer_tick_count = 0
     ghost_tick_count = 0
+    fraction = 12
     level_index = 0
     game_state = 'menu'
     invincible = False
@@ -416,7 +429,7 @@ def main() -> None:
             buttons, level_index, game_state = handle_playing(
                 frame_tick_count, level_time, level_index, shadow_mode,
                 invincible, speed_boost, time_paused, buttons, player_name,
-                game_state, pacman, ghost_tick_count)
+                game_state, pacman, ghost_tick_count, fraction)
         elif game_state == 'submenu':
             buttons = handle_submenu(player_name, buttons)
         elif game_state == 'name_input':
@@ -424,7 +437,11 @@ def main() -> None:
                               level_index >= len(con['levels']),
                               pacman.score)
             pygame.display.update()
-        if frame_tick_count >= 10:
+        if speed_boost:
+            fraction = 9
+        else:
+            fraction = 12
+        if frame_tick_count >= fraction :
             frame_tick_count = 0
         ghost_cycle_length = 30
         if ghost_tick_count >= ghost_cycle_length:
@@ -465,11 +482,11 @@ def main() -> None:
                         invincible, shadow_mode, speed_boost,
                         time_paused)
                 elif game_state == 'instructions':
-                    if buttons[0].collidepoint(event.pos):
+                    if button_collision(event.pos, buttons[0]):
                         game_state = 'menu'
                         buttons = display_menu()
                 elif game_state == 'high_score':
-                    if buttons[0].collidepoint(event.pos):
+                    if button_collision(event.pos, buttons[1]):
                         game_state = 'menu'
                         buttons = display_menu()
 
