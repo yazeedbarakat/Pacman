@@ -9,6 +9,7 @@ import sys
 import pygame
 from typing import List, Dict, Optional
 from ghost import Ghost
+from constants import resource_path
 
 
 class GhostRenderer:
@@ -47,11 +48,11 @@ class GhostRenderer:
         if any image file is missing or cannot be loaded.
         """
         asset_files = {
-            'blinky': 'assets/ghosts/blinky.png',
-            'pinky': 'assets/ghosts/pinky.png',
-            'inky': 'assets/ghosts/inky.png',
-            'clyde': 'assets/ghosts/clyde.png',
-            'blue': 'assets/ghosts/blue_ghost.png',
+            'blinky': resource_path('assets/ghosts/blinky.png'),
+            'pinky': resource_path('assets/ghosts/pinky.png'),
+            'inky': resource_path('assets/ghosts/inky.png'),
+            'clyde': resource_path('assets/ghosts/clyde.png'),
+            'blue': resource_path('assets/ghosts/blue_ghost.png'),
         }
 
         for name, path in asset_files.items():

@@ -8,7 +8,7 @@ all: run
 install:
 	$(PYTHON) -m pip install pygame flake8 mypy mazegenerator-2.1.0-py3-none-any.whl
 
-run:
+run: install
 	$(PYTHON) game.py $(CONFIG)
 
 debug:

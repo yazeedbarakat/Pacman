@@ -31,8 +31,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "level_max_time": 90
 }
 
-MIN_WIDTH, MAX_WIDTH = 15, 30
-MIN_HEIGHT, MAX_HEIGHT = 11, 24
+MIN_WIDTH, MAX_WIDTH = 14, 20
+MIN_HEIGHT, MAX_HEIGHT = 10, 18
 
 
 def read_config(filename: str) -> Dict[str, Any]:

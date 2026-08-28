@@ -11,9 +11,9 @@ from typing import Any
 from mazegenerator import MazeGenerator
 import pygame
 
-from constants import CELL_SIZE
-
 pygame.init()
+
+CELL_SIZE = 40
 
 
 def maze_loader(maze_size: tuple[int, int], maze_seed: int) -> dict[str, Any]:
