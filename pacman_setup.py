@@ -7,32 +7,30 @@ animation with interpolated drawing.
 
 import pygame
 
-from constants import CELL_SIZE
+from constants import resource_path
 
-PACMAN_UP_1 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-up/1.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
-PACMAN_UP_2 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-up/2.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
-PACMAN_UP_3 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-up/3.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
-PACMAN_DOWN_1 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-down/1.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
-PACMAN_DOWN_2 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-down/2.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
-PACMAN_DOWN_3 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-down/3.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
-PACMAN_LEFT_1 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-left/1.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
-PACMAN_LEFT_2 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-left/2.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
-PACMAN_LEFT_3 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-left/3.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
-PACMAN_RIGHT_1 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-right/1.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
-PACMAN_RIGHT_2 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-right/2.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
-PACMAN_RIGHT_3 = pygame.transform.scale(pygame.image.load(
-    'assets/pacman-right/3.png'), (CELL_SIZE - 15, CELL_SIZE - 15))
+CELL_SIZE = 40
+
+
+def _load_pacman_sprite(path: str) -> pygame.Surface:
+    """Load and scale one Pacman directional sprite frame."""
+    return pygame.transform.scale(
+        pygame.image.load(resource_path(path)),
+        (CELL_SIZE - 15, CELL_SIZE - 15))
+
+
+PACMAN_UP_1 = _load_pacman_sprite('assets/pacman-up/1.png')
+PACMAN_UP_2 = _load_pacman_sprite('assets/pacman-up/2.png')
+PACMAN_UP_3 = _load_pacman_sprite('assets/pacman-up/3.png')
+PACMAN_DOWN_1 = _load_pacman_sprite('assets/pacman-down/1.png')
+PACMAN_DOWN_2 = _load_pacman_sprite('assets/pacman-down/2.png')
+PACMAN_DOWN_3 = _load_pacman_sprite('assets/pacman-down/3.png')
+PACMAN_LEFT_1 = _load_pacman_sprite('assets/pacman-left/1.png')
+PACMAN_LEFT_2 = _load_pacman_sprite('assets/pacman-left/2.png')
+PACMAN_LEFT_3 = _load_pacman_sprite('assets/pacman-left/3.png')
+PACMAN_RIGHT_1 = _load_pacman_sprite('assets/pacman-right/1.png')
+PACMAN_RIGHT_2 = _load_pacman_sprite('assets/pacman-right/2.png')
+PACMAN_RIGHT_3 = _load_pacman_sprite('assets/pacman-right/3.png')
 
 
 class Pacman:
@@ -69,13 +67,12 @@ class Pacman:
             'L': [PACMAN_LEFT_1, PACMAN_LEFT_2, PACMAN_LEFT_3]
         }
 
-    def move(self, steps: int) -> None:
-        """Advance up to `steps` cells in the current direction,
-        stopping at walls.
+    def move(self) -> None:
+        """Advance one cell in the current direction, stopping at walls.
 
-        Args:
-            steps: Number of grid cells to attempt to move (1 normally,
-                2 with the speed-boost cheat).
+        Turns onto `nxt_dir` first if that direction is open from the
+        current cell; otherwise keeps moving in `cur_dir` and leaves
+        `nxt_dir` buffered until it becomes open.
         """
         dir_map = {
             '': (0x0, 0, 0),
@@ -85,12 +82,14 @@ class Pacman:
             'L': (0x8, -1, 0)
         }
         self.prev_position = self.position
-        for i in range(steps):
-            if (self.grid[self.position[1]][self.position[0]]
-                    & dir_map[self.cur_dir][0]):
-                break
-            self.position = (self.position[0] + dir_map[self.cur_dir][1],
-                             self.position[1] + dir_map[self.cur_dir][2])
+        if not (self.grid[self.position[1]][self.position[0]]
+                & dir_map[self.nxt_dir][0]):
+            self.cur_dir = self.nxt_dir
+        if not (self.grid[self.position[1]][self.position[0]]
+                & dir_map[self.cur_dir][0]):
+            self.position = (
+                self.position[0] + dir_map[self.cur_dir][1],
+                self.position[1] + dir_map[self.cur_dir][2])
 
     def respawn(self) -> bool:
         """Lose a life and reset to the maze center.
@@ -133,8 +132,10 @@ class Pacman:
             maze_y: Pixel y-offset of the maze's top-left corner.
         """
         draw_x = self.prev_position[0] + (
-            self.position[0] - self.prev_position[0]) * frame_tick_count / fraction
+            self.position[0] - self.prev_position[0]
+        ) * frame_tick_count / fraction
         draw_y = self.prev_position[1] + (
-            self.position[1] - self.prev_position[1]) * frame_tick_count / fraction
+            self.position[1] - self.prev_position[1]
+        ) * frame_tick_count / fraction
         screen.blit(self.get_frame(), (
             draw_x * CELL_SIZE + 8 + maze_x, draw_y * CELL_SIZE + 8 + maze_y))

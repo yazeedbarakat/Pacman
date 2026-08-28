@@ -1,1 +1,6 @@
-__pycache__
+__pycache__/
+*.pyc
+.mypy_cache/
+env/
+build/
+dist/

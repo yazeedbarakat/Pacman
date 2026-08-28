@@ -7,27 +7,26 @@ progression, cheat mode, and all pygame event dispatch.
 
 import sys
 import pygame
+import random
+import ghost_renderer as ghost_renderer_module
+from ghost import Ghost
+from high_scores_config import add_high_score
+import pacman_setup
+import maze_pacgum as m
+from config_parser import read_config
+from constants import resource_path, writable_path
+from displays import display_menu, display_instructions, \
+    display_cheat_mode, display_submenu, display_high_scores, \
+    display_save_name, init_gif, init_display, display_hearts, \
+    display_level, display_timer, display_score
 
-try:
-    import ghost_renderer as ghost_renderer_module
-    from ghost import Ghost
-    from high_scores_config import add_high_score
-    import pacman_setup
-    import maze_pacgum as m
-    from config_parser import read_config
-    from constants import CELL_SIZE
-    from displays import display_menu, display_instructions, \
-        display_cheat_mode, display_submenu, display_high_scores, \
-        display_save_name, init_gif, init_display, display_hearts, \
-        display_level, display_timer, display_score
-except (FileNotFoundError, pygame.error) as e:
-    print(f'Error: failed to load a game asset: {e}')
+if len(sys.argv) > 2:
+    print('Usage: python3 game.py [config_file.json]')
     sys.exit(1)
-
-if len(sys.argv) != 2:
-    print('Usage: python3 game.py <config_file.json>')
-    sys.exit(1)
-con = read_config(sys.argv[1])
+config_path = sys.argv[1] if len(sys.argv) == 2 else resource_path(
+    'config.json')
+con = read_config(config_path)
+HIGHSCORE_PATH = writable_path(con['highscore_filename'])
 pygame.font.init()
 
 
@@ -46,6 +45,7 @@ def get_level_config(level_index: int) -> tuple[int, int]:
     return width, height
 
 
+CELL_SIZE = 40
 maze_width, maze_height = get_level_config(0)
 level_time = con['level_max_time']
 screen_width, screen_height = 1920, 1080
@@ -131,7 +131,7 @@ def switch_level(level_index: int) -> None:
     global level_time, x_cor, ghosts
     maze_width, maze_height = get_level_config(level_index)
     x_cor = screen_width // 2 - maze_width * CELL_SIZE // 2
-    maze = m.maze_loader((maze_width, maze_height), 0)
+    maze = m.maze_loader((maze_width, maze_height), random.randint(0, 1000))
     pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'],
                               con['points_per_pacgum'],
                               con['points_per_super_pacgum'], con['pacgum'])
@@ -179,14 +179,15 @@ def handle_playing(
             ghost.prev_x, ghost.prev_y = ghost.x, ghost.y
         elif ghost_tick_count == 1:
             ghost.update(pacman.position)
-    if frame_tick_count  == 1:
-        pacman.cur_dir = pacman.nxt_dir
-        pacman.move(1)
+    if frame_tick_count == 1:
+        pacman.move()
         pacman.update_frame()
     pac_x = pacman.prev_position[0] + (
-        pacman.position[0] - pacman.prev_position[0]) * frame_tick_count / fraction
+        pacman.position[0] - pacman.prev_position[0]
+    ) * frame_tick_count / fraction
     pac_y = pacman.prev_position[1] + (
-        pacman.position[1] - pacman.prev_position[1]) * frame_tick_count / fraction
+        pacman.position[1] - pacman.prev_position[1]
+    ) * frame_tick_count / fraction
     for pacgum in pacgums:
         if not pacgum.eaten and (pac_x - pacgum.position[0] == 0) \
                 and (pac_y - pacgum.position[1] == 0):
@@ -209,7 +210,7 @@ def handle_playing(
     for ghost in ghosts:
         gx = ghost.prev_x + (ghost.x - ghost.prev_x) * ghost_tick_count / cycle
         gy = ghost.prev_y + (ghost.y - ghost.prev_y) * ghost_tick_count / cycle
-        if abs(pac_x - gx) < .3  and abs(pac_y - gy) < .3:
+        if abs(pac_x - gx) < .3 and abs(pac_y - gy) < .3:
             if ghost.state == "escape":
                 ghost.get_eaten()
                 pacman.score += con['points_per_ghost']
@@ -221,8 +222,8 @@ def handle_playing(
                     return (buttons, level_index, game_state)
     m.draw_maze(screen, maze, x_cor, y_cor)
     m.draw_pacgums(screen, pacgums, x_cor, y_cor)
-    pacman.draw_pacman(screen, frame_tick_count, x_cor, y_cor, speed_boost,
-        fraction)
+    pacman.draw_pacman(
+        screen, frame_tick_count, x_cor, y_cor, speed_boost, fraction)
     maze_surface = screen.subsurface(
         (x_cor, y_cor, maze_width * CELL_SIZE, maze_height * CELL_SIZE))
     ghost_renderer.draw_ghosts(maze_surface, ghosts, ghost_tick_count, 30)
@@ -253,7 +254,7 @@ def handle_submenu(
     return buttons
 
 
-def button_collision(click_pos: tuple[int, int], butten :pygame.Rect) -> bool:
+def button_collision(click_pos: tuple[int, int], butten: pygame.Rect) -> bool:
     start_x = butten.left
     end_x = butten.right
     start_y = butten.top
@@ -297,10 +298,10 @@ def handle_menu_buttons(
         buttons = display_instructions()
     elif button_collision(event.pos, buttons[2]):
         game_state = 'high_score'
-        buttons = display_high_scores(con['highscore_filename'])
+        buttons = display_high_scores(HIGHSCORE_PATH)
     elif button_collision(event.pos, buttons[3]):
         pygame.quit()
-        exit()
+        sys.exit()
     return (buttons, game_state)
 
 
@@ -397,7 +398,6 @@ def handle_submenu_buttons(
     return (buttons, game_state)
 
 
-
 def main() -> None:
     """Run the game: set up the window and menu, then loop until quit.
 
@@ -441,7 +441,7 @@ def main() -> None:
             fraction = 9
         else:
             fraction = 12
-        if frame_tick_count >= fraction :
+        if frame_tick_count >= fraction:
             frame_tick_count = 0
         ghost_cycle_length = 30
         if ghost_tick_count >= ghost_cycle_length:
@@ -458,7 +458,7 @@ def main() -> None:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                exit()
+                sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if game_state == 'menu':
                     level_index = 0
@@ -486,7 +486,7 @@ def main() -> None:
                         game_state = 'menu'
                         buttons = display_menu()
                 elif game_state == 'high_score':
-                    if button_collision(event.pos, buttons[1]):
+                    if button_collision(event.pos, buttons[0]):
                         game_state = 'menu'
                         buttons = display_menu()
 
@@ -509,7 +509,7 @@ def main() -> None:
                 elif (event.key in (pygame.K_KP_ENTER, pygame.K_RETURN)
                         and player_name != ''):
                     add_high_score(
-                        con['highscore_filename'], player_name,
+                        HIGHSCORE_PATH, player_name,
                         pacman.score)
                     game_state = 'menu'
                     buttons = display_menu()

@@ -7,30 +7,40 @@ level, timer) onto the game screen bound via init_display.
 
 import pygame
 from high_scores_config import load_high_scores
+from constants import resource_path
 import os
 
 pygame.init()
 
 pygame.font.init()
-menu_font = pygame.font.Font('assets/fonts/Comfortaa-Regular.otf', 30)
-rules_font = pygame.font.Font('assets/fonts/Comfortaa-Regular.otf', 23)
-name_font = pygame.font.Font('assets/fonts/Comfortaa-Bold.otf', 30)
-level_font = pygame.font.Font('assets/fonts/Montserrat-Bold.otf', 45)
-timer_font = pygame.font.Font('assets/fonts/Montserrat-Bold.otf', 40)
+menu_font = pygame.font.Font(
+    resource_path('assets/fonts/Comfortaa-Regular.otf'), 30)
+rules_font = pygame.font.Font(
+    resource_path('assets/fonts/Comfortaa-Regular.otf'), 23)
+name_font = pygame.font.Font(
+    resource_path('assets/fonts/Comfortaa-Bold.otf'), 30)
+level_font = pygame.font.Font(
+    resource_path('assets/fonts/Montserrat-Bold.otf'), 45)
+timer_font = pygame.font.Font(
+    resource_path('assets/fonts/Montserrat-Bold.otf'), 40)
 
 yellow_button = pygame.transform.scale(
-    pygame.image.load('assets/menu/yellow_button.png'), (426, 207))
+    pygame.image.load(resource_path('assets/menu/yellow_button.png')),
+    (426, 207))
 purple_button = pygame.transform.scale(
-    pygame.image.load('assets/menu/purple_button.png'), (490, 207))
+    pygame.image.load(resource_path('assets/menu/purple_button.png')),
+    (490, 207))
 background = pygame.transform.scale(
-    pygame.image.load('assets/menu/game_background.png'), (1920, 1080))
-pacman = pygame.image.load('assets/menu/pac-man.png')
+    pygame.image.load(resource_path('assets/menu/game_background.png')),
+    (1920, 1080))
+pacman = pygame.image.load(resource_path('assets/menu/pac-man.png'))
 heart = pygame.transform.scale(
-    pygame.image.load('assets/menu/heart.png'), (60, 60))
+    pygame.image.load(resource_path('assets/menu/heart.png')), (60, 60))
 game_over = pygame.transform.scale(
-    pygame.image.load('assets/menu/game_over.png'), (700, 500))
+    pygame.image.load(resource_path('assets/menu/game_over.png')),
+    (700, 500))
 you_win = pygame.transform.scale(
-    pygame.image.load('assets/menu/you_win.png'), (700, 500))
+    pygame.image.load(resource_path('assets/menu/you_win.png')), (700, 500))
 gif_frames: list[pygame.Surface] = []
 gif_index = 0
 gif_tick = 0
@@ -43,8 +53,9 @@ def init_gif() -> None:
     """Load every frame of the game-over gif from disk, sorted by filename."""
     global gif_frames, gif_index
     frames = []
-    for f in sorted(os.listdir('assets/menu/gif/')):
-        frame = pygame.image.load(f'assets/menu/gif/{f}')
+    gif_dir = resource_path('assets/menu/gif/')
+    for f in sorted(os.listdir(gif_dir)):
+        frame = pygame.image.load(os.path.join(gif_dir, f))
         frames.append(frame)
     gif_frames = frames
     gif_index = 0
@@ -102,7 +113,8 @@ def display_menu() -> tuple[
     Returns:
         (play_button, instructions_button, high_score_button, exit_button).
     """
-    pacman_logo = pygame.image.load('assets/menu/Pac-Man-Logo.png')
+    pacman_logo = pygame.image.load(
+        resource_path('assets/menu/Pac-Man-Logo.png'))
     pacman_logo = pygame.transform.scale(pacman_logo, (500, 300))
     screen.blit(background, (0, 0))
     screen.blit(pacman_logo, (width/2 - 250, height/2 - 500))
@@ -128,7 +140,8 @@ def display_instructions() -> tuple[pygame.Rect]:
     """
     screen.blit(background, (0, 0))
     arrows = pygame.transform.scale(
-        pygame.image.load("assets/menu/arrows.png"), (260, 260))
+        pygame.image.load(resource_path('assets/menu/arrows.png')),
+        (260, 260))
     rules = [
         "- Eat all pacgums to clear the level; clear every level to win",
         "- Touching a chasing ghost costs a life; 0 lives is game over",
