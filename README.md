@@ -134,6 +134,10 @@ Project management documentation, progress tracking, risk assessment, and peer e
 
 ---
 
+## Play the game
+
+Download the packaged build from Itch.io: [Pac-Man on Itch.io](https://yazeedbarakat.itch.io/pacmannnnnnnnnnnnnnnnnnnnnnnnnnnn)
+
 ## Resources
 
 ### References & Documentation
