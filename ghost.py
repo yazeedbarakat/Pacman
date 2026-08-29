@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """Ghost AI module for Pacman.
 
 Defines the Ghost class which implements three behavioral states
@@ -5,12 +6,15 @@ Defines the Ghost class which implements three behavioral states
 scaling, and maze-aware movement.
 """
 
+=======
+>>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
 import time
 from typing import Tuple, List, Optional
 import random
 
 
 class Ghost:
+<<<<<<< HEAD
     """A ghost enemy with state-driven AI behavior.
 
     Each ghost operates in one of three states:
@@ -48,6 +52,9 @@ class Ghost:
             level: Current game level (1-indexed), used to scale ghost
                 parameters.
         """
+=======
+    def __init__(self, start_x: int, start_y: int, difficulty: bool, maze: List[List[int]], level: int = 1):
+>>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
         self.start_x = start_x
         self.start_y = start_y
         self.x = start_x
@@ -66,19 +73,29 @@ class Ghost:
             (-1, 0): 0x8
         }
 
+<<<<<<< HEAD
         if not self.difficulty:
+=======
+        if self.difficulty:
+>>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
             self.return_life = max(1, 8 - (self.level * 0.5))
             self.weak_ghost = max(1, 10 - (self.level * 0.5))
             self.view_range = 5 + (self.level * 2)
         else:
             self.return_life = max(1, 4 - (self.level * 0.5))
+<<<<<<< HEAD
             self.weak_ghost = max(5, 10 - (self.level * 0.5))
             self.view_range = 10000
+=======
+            self.weak_ghost = max(1, 5 - (self.level * 0.5))
+            self.view_range = 30 + (self.level * 2)
+>>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
 
         self.death_time = 0.0
         self.edible_time = 0.0
 
     def update(self, player_pos: Tuple[int, int]) -> None:
+<<<<<<< HEAD
         """Update the ghost's state and position for one game tick.
 
         Handles state transitions (respawn cooldown expiry, edible timer
@@ -87,6 +104,8 @@ class Ghost:
         Args:
             player_pos: The player's current (x, y) position.
         """
+=======
+>>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
         if self.state == "respawn":
             if time.time() - self.death_time >= self.return_life:
                 self.state = "chasing"
@@ -99,6 +118,7 @@ class Ghost:
                 self.escape_player(player_pos)
 
     def get_eaten(self) -> None:
+<<<<<<< HEAD
         """Handle the ghost being eaten by the player.
 
         Transitions the ghost to the 'respawn' state, resets its position
@@ -118,11 +138,20 @@ class Ghost:
         Transitions the ghost to the 'escape' state unless it is currently
         respawning. Records the timestamp to track edible duration.
         """
+=======
+        self.state = "respawn"
+        self.x = self.start_x
+        self.y = self.start_y
+        self.death_time = time.time()
+
+    def make_edible(self) -> None:
+>>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
         if self.state != "respawn":
             self.state = "escape"
             self.edible_time = time.time()
 
     def chase_player(self, player_pos: Tuple[int, int]) -> None:
+<<<<<<< HEAD
         """Move the ghost toward the player using BFS pathfinding.
 
         If the player is outside the ghost's view range (Manhattan
@@ -138,12 +167,22 @@ class Ghost:
 
         current_distance = abs(target_x - self.x) + abs(target_y - self.y)
 
+=======
+        target_x, target_y = player_pos
+
+        current_distance = abs(target_x - self.x) + abs(target_y - self.y)
+        
+>>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
         if current_distance > self.view_range:
             self.random_move()
             return
 
+<<<<<<< HEAD
         queue: List[Tuple[int, int, List[Tuple[int, int]]]] = [
             (self.x, self.y, [])]
+=======
+        queue = [(self.x, self.y, [])] 
+>>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
         visited = {(self.x, self.y)}
         best_path = []
 
@@ -161,17 +200,25 @@ class Ghost:
                 next_x = curr_x + dx
                 next_y = curr_y + dy
 
+<<<<<<< HEAD
                 if self.is_valid_move(
                         curr_x, curr_y, next_x, next_y, wall_bit):
                     if (next_x, next_y) not in visited:
                         visited.add((next_x, next_y))
                         queue.append(
                             (next_x, next_y, path + [(next_x, next_y)]))
+=======
+                if self.is_valid_move(curr_x, curr_y, next_x, next_y, wall_bit):
+                    if (next_x, next_y) not in visited:
+                        visited.add((next_x, next_y))
+                        queue.append((next_x, next_y, path + [(next_x, next_y)]))
+>>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
 
         if best_path:
             self.x, self.y = best_path[0]
 
     def escape_player(self, player_pos: Tuple[int, int]) -> None:
+<<<<<<< HEAD
         """Move the ghost away from the player.
 
         Evaluates all valid adjacent moves and selects the one that
@@ -181,6 +228,8 @@ class Ghost:
             player_pos: The player's current (x, y) position.
         """
         self.prev_x, self.prev_y = self.x, self.y
+=======
+>>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
         target_x, target_y = player_pos
 
         best_move: Optional[Tuple[int, int]] = None
@@ -200,12 +249,15 @@ class Ghost:
             self.x, self.y = best_move
 
     def random_move(self) -> None:
+<<<<<<< HEAD
         """Move the ghost to a random valid adjacent cell.
 
         Collects all valid moves and, if more than one option exists,
         excludes the previous position to avoid immediate backtracking.
         A random choice is then made from the remaining options.
         """
+=======
+>>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
         valid_moves = []
 
         for (dx, dy), wall_bit in self.dir_wall_map.items():
@@ -222,6 +274,7 @@ class Ghost:
             self.prev_x, self.prev_y = self.x, self.y
             self.x, self.y = random.choice(valid_moves)
 
+<<<<<<< HEAD
     def is_valid_move(self, curr_x: int, curr_y: int, next_x: int,
                       next_y: int, wall_bit: int) -> bool:
         """Check whether a move between two adjacent cells is valid.
@@ -240,6 +293,9 @@ class Ghost:
         Returns:
             True if the move is valid, False otherwise.
         """
+=======
+    def is_valid_move(self, curr_x: int, curr_y: int, next_x: int, next_y: int, wall_bit: int) -> bool:
+>>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
         if 0 <= next_y < len(self.maze) and 0 <= next_x < len(self.maze[0]):
             no_wall = not (self.maze[curr_y][curr_x] & wall_bit)
             not_solid = (self.maze[next_y][next_x] != 0xF)
