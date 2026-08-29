@@ -7,7 +7,7 @@ animation with interpolated drawing.
 
 import pygame
 
-from constants import resource_path
+from paths import resource_path
 
 CELL_SIZE = 40
 

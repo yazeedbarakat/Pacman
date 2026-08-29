@@ -14,7 +14,7 @@ from high_scores_config import add_high_score
 import pacman_setup
 import maze_pacgum as m
 from config_parser import read_config
-from constants import resource_path, writable_path
+from paths import resource_path, writable_path
 from displays import display_menu, display_instructions, \
     display_cheat_mode, display_submenu, display_high_scores, \
     display_save_name, init_gif, init_display, display_hearts, \
@@ -52,17 +52,17 @@ screen_width, screen_height = 1920, 1080
 x_cor = screen_width // 2 - maze_width * CELL_SIZE // 2
 y_cor = screen_height // 2 - 300
 FPS = 60
-
-pygame.init()
-screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption('Pacman')
-clock = pygame.time.Clock()
 maze = m.maze_loader((maze_width, maze_height), con['seed'])
 pacgums = m.place_pacgums((maze_width, maze_height), maze['grid'],
                           con['points_per_pacgum'],
                           con['points_per_super_pacgum'], con['pacgum'])
 pacman = pacman_setup.Pacman(
     maze['grid'], maze_width, maze_height, con['lives'])
+
+pygame.init()
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption('Pacman')
+clock = pygame.time.Clock()
 ghost_renderer = ghost_renderer_module.GhostRenderer(cell_size=CELL_SIZE)
 level = 0
 init_gif()

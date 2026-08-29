@@ -1,6 +1,8 @@
 __pycache__/
-*.pyc
 .mypy_cache/
-env/
 build/
 dist/
+*.spec.bak
+*.pyc
+pc.json
+config.json.bak

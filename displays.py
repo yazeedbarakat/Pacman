@@ -7,7 +7,7 @@ level, timer) onto the game screen bound via init_display.
 
 import pygame
 from high_scores_config import load_high_scores
-from constants import resource_path
+from paths import resource_path
 import os
 
 pygame.init()

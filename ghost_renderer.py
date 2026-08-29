@@ -9,7 +9,7 @@ import sys
 import pygame
 from typing import List, Dict, Optional
 from ghost import Ghost
-from constants import resource_path
+from paths import resource_path
 
 
 class GhostRenderer:

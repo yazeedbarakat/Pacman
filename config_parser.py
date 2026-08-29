@@ -83,13 +83,18 @@ def read_config(filename: str) -> Dict[str, Any]:
                     print(f"Warning: Negative value for '{key}'. "
                           f"Using default: {default_val}")
                     continue
-
                 if key == "levels":
                     valid_config[key] = validate_levels(val)
                     continue
-
+                if key == 'lives' and val > 13:
+                    print("Warning: starting number of lives is too high,"
+                          " using the default value")
+                    continue
+                if key == 'level_max_time' and val > 300:
+                    print("Warning: starting max time is too high,"
+                          " using the default value")
+                    continue
                 valid_config[key] = val
-
             return valid_config
 
     except FileNotFoundError:
