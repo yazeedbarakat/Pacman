@@ -1,18 +1,14 @@
-<<<<<<< HEAD
 """Ghost rendering module for Pacman.
 
 Provides the GhostRenderer class which handles loading ghost sprite
 assets and drawing interpolated ghost positions onto a Pygame surface.
 """
 
-=======
->>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
 import os
 import sys
 import pygame
 from typing import List, Dict, Optional
 from ghost import Ghost
-<<<<<<< HEAD
 from paths import resource_path
 
 
@@ -39,19 +35,11 @@ class GhostRenderer:
         """
         self.cell_size: int = cell_size
         self.ghost_size: int = cell_size - 16
-=======
-
-class GhostRenderer:
-    def __init__(self, cell_size: int = 18) -> None:
-        self.cell_size: int = cell_size
-        self.ghost_size: int = cell_size - 4
->>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
         self.center_offset: int = (cell_size - self.ghost_size) // 2
         self.ghost_images: Dict[str, pygame.Surface] = {}
         self._load_ghost_images()
 
     def _load_ghost_images(self) -> None:
-<<<<<<< HEAD
         """Load and scale ghost sprite images from the assets directory.
 
         Loads PNG images for Blinky, Pinky, Inky, Clyde, and the blue
@@ -65,25 +53,13 @@ class GhostRenderer:
             'inky': resource_path('assets/ghosts/inky.png'),
             'clyde': resource_path('assets/ghosts/clyde.png'),
             'blue': resource_path('assets/ghosts/blue_ghost.png'),
-=======
-        asset_files = {
-            'blinky': 'assets/ghosts/blinky.png',
-            'pinky': 'assets/ghosts/pinky.png',
-            'inky': 'assets/ghosts/inky.png',
-            'clyde': 'assets/ghosts/clyde.png',
-            'blue': 'assets/ghosts/blue_ghost.png',
->>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
         }
 
         for name, path in asset_files.items():
             if not os.path.exists(path):
                 print(f"Error: Missing ghost image file at '{path}'")
                 sys.exit(1)
-<<<<<<< HEAD
 
-=======
-                
->>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
             try:
                 image = pygame.image.load(path).convert_alpha()
                 self.ghost_images[name] = pygame.transform.scale(
@@ -97,7 +73,6 @@ class GhostRenderer:
         self,
         screen: pygame.Surface,
         ghost: Ghost,
-<<<<<<< HEAD
         ghost_name: str = 'blinky',
         tick: int = 0,
         cycle_length: int = 10,
@@ -128,23 +103,11 @@ class GhostRenderer:
         elif ghost.state == "chasing":
             screen.blit(self.ghost_images[ghost_name],
                         (gx * self.cell_size + 8, gy * self.cell_size + 8))
-=======
-        ghost_name: str = 'blinky'
-    ) -> None:
-        gx = ghost.x * self.cell_size + self.center_offset
-        gy = ghost.y * self.cell_size + self.center_offset
-
-        if ghost.state == "escape":
-            screen.blit(self.ghost_images['blue'], (gx, gy))
-        elif ghost.state == "chasing":
-            screen.blit(self.ghost_images[ghost_name], (gx, gy))
->>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
 
     def draw_ghosts(
         self,
         screen: pygame.Surface,
         ghosts: List[Ghost],
-<<<<<<< HEAD
         tick: int = 0,
         cycle_length: int = 10,
         ghost_names: Optional[List[str]] = None
@@ -162,19 +125,11 @@ class GhostRenderer:
             ghost_names: Ordered list of ghost name keys to assign. If
                 None, defaults to ['blinky', 'pinky', 'inky', 'clyde'].
         """
-=======
-        ghost_names: Optional[List[str]] = None
-    ) -> None:
->>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
         if ghost_names is None:
             ghost_names = ['blinky', 'pinky', 'inky', 'clyde']
 
         i = 0
         for ghost in ghosts:
             name = ghost_names[i % len(ghost_names)]
-<<<<<<< HEAD
             self.draw_ghost(screen, ghost, name, tick, cycle_length)
-=======
-            self.draw_ghost(screen, ghost, name)
->>>>>>> dd9e3cdb83689ea70bc2636ae7425ce9e37de772
             i += 1
